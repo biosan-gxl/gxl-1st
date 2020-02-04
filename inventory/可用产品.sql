@@ -1,3 +1,5 @@
+#18个月内有过出库、开票、发货记录的非LDT产品定义为可用产品
+#LDT产品是否可用根据线下复核的定
 UPDATE edw.map_inventory b
 left JOIN 
 (SELECT DISTINCT cinvcode
