@@ -1,0 +1,33 @@
+#1、当一个客户既有临床销售又有技术销售时，存在诊断项目技术销售在做或者筛查项目临床销售在做
+SELECT f.*
+FROM
+(SELECT d.* #找出存在两线销售的客户的所有信息
+		FROM fst.dt_17_cusitem_person_mon d
+		RIGHT JOIN 
+							(SELECT cusname #找出既有临床销售又有技术销售的客户
+							FROM
+									(SELECT DISTINCT a.cusname,a.p_spe_main_position
+									FROM fst.dt_17_cusitem_person_mon a
+									WHERE a.p_spe_main_position='临床销售' OR a.p_spe_main_position='技术销售' )b
+							GROUP BY b.cusname
+							HAVING COUNT(b.cusname)=2)c
+		ON c.cusname=d.cusname
+		WHERE d.ym='2020-02-01')f
+INNER JOIN 
+(SELECT level_three#找出临床销售做筛查或者技术销售做诊断的项目
+FROM
+		(SELECT d.* #找出这种客户的所有信息
+		FROM fst.dt_17_cusitem_person_mon d
+		RIGHT JOIN 
+							(SELECT cusname #找出既有临床销售又有技术销售的客户
+							FROM
+									(SELECT DISTINCT a.cusname,a.p_spe_main_position
+									FROM fst.dt_17_cusitem_person_mon a
+									WHERE a.p_spe_main_position='临床销售' OR a.p_spe_main_position='技术销售' )b
+							GROUP BY b.cusname
+							HAVING COUNT(b.cusname)=2)c
+		ON c.cusname=d.cusname
+		WHERE d.ym='2020-02-01')e
+	WHERE (screen_class='筛查' AND p_spe_main_position='临床销售') OR (screen_class='诊断' AND p_spe_main_position='技术销售'))g
+	ON f.level_three=g.level_three
+	ORDER BY f.level_three
