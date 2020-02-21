@@ -1,0 +1,23 @@
+#同一产品不同账套间品牌不一致
+SELECT DISTINCT db,inventory.cinvcode,cinvname,cinvdefine5
+FROM inventory
+RIGHT JOIN
+(select a.cinvcode from 
+(select * from inventory where cinvdefine5 is not null  group by cinvcode,cinvdefine5) a
+group by cinvcode having count(*) > 1) b
+ON inventory.cinvcode=b.cinvcode
+WHERE cinvdefine5 is not null
+ORDER BY inventory.cinvcode;
+
+
+#找出U8有产品规格，档案里没有的或者产品档案里的规格与U8不一致
+
+SELECT
+	b.bi_cinvcode,a.cinvstd,b.specification_type 
+FROM
+	edw.map_inventory b
+	INNER JOIN ( SELECT DISTINCT cinvcode, cinvname, cinvstd FROM ufdata.inventory WHERE cinvstd IS NOT NULL ) a ON a.cinvcode = b.bi_cinvcode 
+WHERE
+	(a.cinvcode = b.bi_cinvcode 
+	AND a.cinvstd <> b.specification_type)  OR a.cinvcode = b.bi_cinvcode 
+	AND b.specification_type is NULL;
