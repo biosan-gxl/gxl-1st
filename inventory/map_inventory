@@ -10,7 +10,7 @@ WHERE cinvdefine5 is not null
 ORDER BY inventory.cinvcode;
 
 
-#找出U8有产品规格，档案里没有的或者产品档案里的规格与U8不一致
+#1、找出U8有产品规格，档案里没有的或者产品档案里的规格与U8不一致
 
 SELECT
 	b.bi_cinvcode,a.cinvstd,b.specification_type 
@@ -21,3 +21,21 @@ WHERE
 	(a.cinvcode = b.bi_cinvcode 
 	AND a.cinvstd <> b.specification_type)  OR a.cinvcode = b.bi_cinvcode 
 	AND b.specification_type is NULL;
+
+#2、U8 cinvbrand没有录入品牌，但是centerprise厂商这一列有具体的厂商，比如杰毅迈特等
+SELECT c.bi_cinvcode,c.bi_cinvname,c.cinvbrand,b.centerprise
+FROM edw.map_inventory c
+LEFT JOIN 
+		(SELECT a.cinvcode,a.cinvname,a.cinvdefine5,a.centerprise
+		FROM ufdata.inventory a
+		WHERE a.cinvdefine5 is NULL AND a.centerprise is not NULL
+		GROUP BY a.cinvcode)b
+ON b.cinvcode=c.bi_cinvcode
+WHERE c.cinvbrand is NULL AND b.centerprise is not NULL
+ORDER BY c.bi_cinvcode
+
+#3、提取规格型号里的数字，判断数字与人份数是否相等
+SELECT bi_cinvcode,specification_type,round(-(-specification_type),0),round(inum_unit_person,0)
+FROM map_inventory
+WHERE specification_type REGEXP '次$|T$|人份|人次|kit|assays|Rxns|反应' AND bi_cinvcode not REGEXP 'YQ|WX'
+AND round(-(-specification_type),0) <> round(inum_unit_person,0)
