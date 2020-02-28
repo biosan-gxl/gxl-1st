@@ -1,0 +1,12 @@
+#取19年按项目分类的各项收入，目的是算实验员成本分摊
+
+SELECT c.finnal_ccusname,c.citemname,c.item_sum
+FROM
+			(SELECT a.finnal_ccusname,a.citemname,SUM(a.isum) item_sum
+			FROM pdm.invoice_order a
+			LEFT JOIN edw.map_inventory b
+			ON a.cinvname=b.bi_cinvname
+			WHERE YEAR(ddate)=2019 and b.business_class='产品类' and b.equipment='否'
+			GROUP BY a.finnal_ccusname,a.citemname)c
+		RIGHT JOIN test.cust_itemgxl d
+		ON c.finnal_ccusname=d.cusname AND c.citemname=d.item_name
