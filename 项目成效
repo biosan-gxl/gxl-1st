@@ -1,12 +1,38 @@
-#取19年按项目分类的各项收入，目的是算实验员成本分摊
-
-SELECT c.finnal_ccusname,c.citemname,c.item_sum
-FROM
-			(SELECT a.finnal_ccusname,a.citemname,SUM(a.isum) item_sum
-			FROM pdm.invoice_order a
-			LEFT JOIN edw.map_inventory b
-			ON a.cinvname=b.bi_cinvname
-			WHERE YEAR(ddate)=2019 and b.business_class='产品类' and b.equipment='否'
-			GROUP BY a.finnal_ccusname,a.citemname)c
-		RIGHT JOIN test.cust_itemgxl d
-		ON c.finnal_ccusname=d.cusname AND c.citemname=d.item_name
+#实验员成本分摊
+SELECT i.cusname,i.itemname,i.item_sum,i.cus_sum,f.account,i.zhanbi*f.account
+FROM 
+#i求出各客户各项目的收入及收入占比
+(SELECT g.cusname,g.itemname,g.item_sum,h.cus_sum,g.item_sum/h.cus_sum as zhanbi
+FROM 
+		# g求出顾客各项目的和
+				(SELECT d.cusname,d.itemname,c.item_sum
+				FROM test.cus_itemgxl d
+				LEFT JOIN 		
+							(SELECT a.finnal_ccusname,a.citemname,SUM(a.isum) item_sum
+							FROM pdm.invoice_order a
+							LEFT JOIN edw.map_inventory b
+							ON a.cinvname=b.bi_cinvname
+							WHERE YEAR(ddate)=2019 and b.business_class='产品类' and b.equipment='否'
+							GROUP BY a.finnal_ccusname,a.citemname)c
+						ON c.finnal_ccusname=d.cusname AND c.citemname=d.itemname)g
+		LEFT JOIN 
+		# h 求出各客户所涉及项目的总和
+		(SELECT g.cusname,sum(g.item_sum) as cus_sum
+		FROM 
+		(SELECT d.cusname,d.itemname,c.item_sum
+		FROM test.cus_itemgxl d
+		LEFT JOIN 		
+					(SELECT a.finnal_ccusname,a.citemname,SUM(a.isum) item_sum
+					FROM pdm.invoice_order a
+					LEFT JOIN edw.map_inventory b
+					ON a.cinvname=b.bi_cinvname
+					WHERE YEAR(ddate)=2019 and b.business_class='产品类' and b.equipment='否'
+					GROUP BY a.finnal_ccusname,a.citemname)c
+				ON c.finnal_ccusname=d.cusname AND c.citemname=d.itemname)g
+			GROUP BY g.cusname)h
+		ON g.cusname=h.cusname)i
+LEFT JOIN 
+(SELECT bi_cusname,mon_1+mon_2+mon_3+mon_4+mon_5+mon_6+mon_7+mon_8+mon_9+mon_10+mon_11+mon_12 as account
+FROM edw.x_account_sy
+WHERE year_=2019)f
+ON i.cusname=f.bi_cusname;
