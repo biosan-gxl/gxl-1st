@@ -39,3 +39,27 @@ SELECT bi_cinvcode,specification_type,round(-(-specification_type),0),round(inum
 FROM map_inventory
 WHERE specification_type REGEXP '次$|T$|人份|人次|kit|assays|Rxns|反应' AND bi_cinvcode not REGEXP 'YQ|WX'
 AND round(-(-specification_type),0) <> round(inum_unit_person,0)
+/*产品档案更新后复核
+#判断档案属性是否唯一
+SELECT a.item_code
+FROM
+(SELECT DISTINCT item_code,level_three,level_two,level_one,equipment,screen_class,item_key_2019
+from edw.map_inventory)a
+GROUP BY a.item_code
+HAVING COUNT(a.item_code)>1;
+#判断人份数是否为空
+SELECT bi_cinvcode
+FROM edw.map_inventory
+WHERE inum_unit_person=0 or inum_unit_person='' OR inum_unit_person is NULL
+#判断清洗档的产品是否都在产品档
+SELECT DISTINCT a.bi_cinvcode
+FROM edw.dic_inventory a
+LEFT JOIN edw.map_inventory b
+ON a.bi_cinvcode=b.bi_cinvcode
+WHERE a.bi_cinvcode is null
+#判断产品档的产品时都都在清洗档
+SELECT DISTINCT b.bi_cinvcode
+FROM edw.dic_inventory a
+RIGHT JOIN edw.map_inventory b
+ON a.bi_cinvcode=b.bi_cinvcode
+WHERE b.bi_cinvcode is null*/
