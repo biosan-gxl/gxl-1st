@@ -64,8 +64,7 @@ RIGHT JOIN edw.map_inventory b
 ON a.bi_cinvcode=b.bi_cinvcode
 WHERE a.bi_cinvcode is null;*/
 
-#提取规格型号里的数字，判断数字与人份数是否相等
 SELECT bi_cinvcode,specification_type,round(-(-specification_type),0),round(inum_unit_person,0)
 FROM edw.map_inventory
 WHERE specification_type REGEXP '次$|T$|人份$|人次$|kit$|assays$' AND bi_cinvcode not REGEXP 'YQ|WX'
-
+and round(-(-specification_type),0)<>round(inum_unit_person,0)
