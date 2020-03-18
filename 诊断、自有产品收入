@@ -1,0 +1,24 @@
+SELECT e.nf,e.finnal_ccusname,e.zsr,c.zdsr,c.zdsr/e.zsr,d.zysr,d.zysr/e.zsr
+FROM 
+#总收入
+(SELECT YEAR(ddate) nf,finnal_ccusname,SUM(isum) zsr
+FROM pdm.invoice_order 
+GROUP BY finnal_ccusname,YEAR(ddate))e
+LEFT JOIN 
+#诊断收入
+(SELECT YEAR(ddate) nf,finnal_ccusname,SUM(isum) zdsr
+FROM pdm.invoice_order a
+LEFT JOIN edw.map_inventory b
+ON a.cinvcode=b.bi_cinvcode
+WHERE b.screen_class='诊断'
+GROUP BY finnal_ccusname,YEAR(ddate))c
+ON c.nf=e.nf AND c.finnal_ccusname=e.finnal_ccusname
+LEFT JOIN 
+#自有产品收入
+(SELECT YEAR(ddate) nf,finnal_ccusname,SUM(isum) zysr
+FROM pdm.invoice_order a
+LEFT JOIN edw.map_inventory b
+ON a.cinvcode=b.bi_cinvcode
+WHERE b.cinvbrand REGEXP '博圣|甄元|贝康|宝荣|杰毅麦特'
+GROUP BY finnal_ccusname,YEAR(ddate))d
+ON e.nf=d.nf AND e.finnal_ccusname=d.finnal_ccusname;
