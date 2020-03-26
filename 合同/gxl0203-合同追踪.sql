@@ -100,6 +100,11 @@ ON a.strcontractid= j.strcontractid AND a.content=j.content
 SET a.actual_1st = a.actual_1st/j.tsh_1st,a.actual_2nd = a.actual_2nd/j.tsh_2nd,a.actual_3rd=a.actual_3rd/j.tsh_3rd,a.actual_4th=a.actual_4th/j.tsh_4th,a.actual_5th=a.actual_5th/j.tsh_4th,a.actual_6th=a.actual_6th/j.tsh_6th
 WHERE standard_classify='筛查率'  
 
+#合同赠送数量追踪
+SELECT finnal_ccusname,cinvcode,SUM(iquantity) zssl
+FROM pdm.invoice_order
+WHERE sales_type='合同赠送' AND YEAR(ddate)=2019
+GROUP BY finnal_ccusname,cinvcode
 
 
 
