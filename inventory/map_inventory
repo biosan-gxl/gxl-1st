@@ -50,24 +50,24 @@ HAVING COUNT(a.item_code)>1;
 #判断人份数是否为空
 SELECT bi_cinvcode
 FROM edw.map_inventory
-WHERE inum_unit_person=0 or inum_unit_person='' OR inum_unit_person is NULL
+WHERE inum_unit_person=0 or inum_unit_person='' OR inum_unit_person is NULL;
 #判断清洗档的产品是否都在产品档
 SELECT DISTINCT a.bi_cinvcode
 FROM edw.dic_inventory a
 LEFT JOIN edw.map_inventory b
 ON a.bi_cinvcode=b.bi_cinvcode
-WHERE b.bi_cinvcode is null AND a.bi_cinvname NOT REGEXP '不用管|暂停|豪华版'
+WHERE b.bi_cinvcode is null AND a.bi_cinvname NOT REGEXP '不用管|暂停|豪华版';
 #判断产品档的产品时都都在清洗档
 SELECT DISTINCT b.bi_cinvcode
 FROM edw.dic_inventory a
 RIGHT JOIN edw.map_inventory b
 ON a.bi_cinvcode=b.bi_cinvcode
-WHERE a.bi_cinvcode is null;*/
+WHERE a.bi_cinvcode is null;
 #判断人份数与规格是否一致
 SELECT bi_cinvcode,specification_type,round(-(-specification_type),0),round(inum_unit_person,0)
 FROM edw.map_inventory
 WHERE specification_type REGEXP '次$|T$|人份$|人次$|kit$|assays$' AND bi_cinvcode not REGEXP 'YQ|WX'
-and round(-(-specification_type),0)<>round(inum_unit_person,0)
+and round(-(-specification_type),0)<>round(inum_unit_person,0);
 # 判断清洗档、产品档里的bi_cinvname是否一致
 SELECT DISTINCT a.bi_cinvcode,a.bi_cinvname as bi_cinvname_dic,c.bi_cinvname as bi_cinvname_map,IF(a.bi_cinvname=c.bi_cinvname,1,0)
 FROM edw.dic_inventory a
