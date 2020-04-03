@@ -1,0 +1,9 @@
+CREATE TEMPORARY TABLE account_fy_prefylx AS
+SELECT ccusname,SUM(md) as c_sum,sum(if(fylx='差旅费',md,0)) as cl_sum,sum(if(fylx='招待费',md,0)) as zd_sum,sum(if(fylx='院内沙龙/考察活动会务费',md,0)) as sl_sum,sum(if(fylx='市级以上会议会务费',md,0)) as sj_sum,sum(if(fylx='日常报销',md,0)) as rc_sum
+FROM pdm.account_fy
+WHERE fashengrq>'2019-12-30'
+GROUP BY ccusname;
+SELECT a.*,b.*
+FROM pdm.cusitem_person_newstate a
+LEFT JOIN test.account_fy_prefylx b
+ON a.cusname=b.ccusname;
