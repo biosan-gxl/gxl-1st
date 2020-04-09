@@ -15,7 +15,7 @@ SELECT a.ddate,a.province,a.areadirector,a.zt,	a.cs_sum,	a.cz_sum,	a.xs_sum,	a.N
 FROM
 (SELECT CONCAT(RIGHT(YEAR(ddate),2),'Q',QUARTER(ddate)) as ddate,a.province,a.areadirector,
 ROUND(SUM(isum)/1000) as zt,
-ROUND(SUM(IF(b.screen_class='筛查' AND b.level_one='产前' AND b.level_two<>'无创筛查',isum,0))/1000) as cs_sum,
+ROUND(SUM(IF(b.screen_class='筛查' AND b.level_one='产前' AND b.level_three not like 'NIPT%',isum,0))/1000) as cs_sum,
 ROUND(SUM(IF(b.screen_class='诊断' AND level_one='产前' ,isum,0))/1000) as cz_sum,
 ROUND(SUM(IF(b.screen_class='筛查' AND level_one='新生儿' ,isum,0))/1000) as xs_sum,
 ROUND(SUM(IF(level_three='NIPT' OR  level_three='NIPT-Plus',isum,0))/1000) as NIPT_sum,
@@ -27,13 +27,14 @@ ROUND(SUM(IF(level_three='CMA' and  business_class='LDT' ,isum,0))/1000) as zdCM
 ROUND(SUM(IF(cinv_key_2020='贝康LDT' and  level_three<>'CMA',isum,0))/1000) as zdbkLDT_sum,
 ROUND(SUM(IF(cinv_key_2020='甄元LDT' and  level_two<>'无创筛查',isum,0))/1000) as zdzyLDT_sum
 FROM invoice_order a
-LEFT JOIN map_inventory b
+LEFT JOIN edw.map_inventory b
 ON a.cinvcode=b.bi_cinvcode
 WHERE province REGEXP '安徽|江苏|浙江|福建|山东|湖南|湖北|上海' and YEAR(ddate)>2018
 GROUP BY YEAR(ddate),QUARTER(ddate),province,areadirector)a
 LEFT JOIN
-(SELECT CONCAT(RIGHT(YEAR(ddate)),'Q',QUARTER(ddate)) as ddate,province_ori,SUM(inum_person) as jcl
+(SELECT CONCAT(RIGHT(YEAR(ddate),2),'Q',QUARTER(ddate)) as ddate,province_ori,SUM(inum_person) as jcl
 FROM checklist
 WHERE item_name='TSH'
 GROUP BY YEAR(ddate),QUARTER(ddate),province_ori)b
 ON a.ddate=b.ddate AND a.province=b.province_ori
+ORDER BY a.province,a.ddate
