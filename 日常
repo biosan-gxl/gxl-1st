@@ -11,7 +11,7 @@ ON a.cinvcode=b.bi_cinvcode
 ORDER BY cinvname;
 
 2.销售进度
-SELECT a.ddate,a.province,a.areadirector,a.zt,	a.cs_sum,	a.cz_sum,	a.xs_sum,	a.NIPT_sum,	a.zdzy_sum,	a.zdzhongy_sum,	a.zdNIPT_sum,	a.zdCMAzj_sum,	a.zdCMAws_sum,	a.zdbkLDT_sum,	a.zdzyLDT_sum,b.jcl
+SELECT a.ddate,a.province,a.areadirector,a.zt,	a.cs_sum,	a.cz_sum,	a.xs_sum,	a.NIPT_sum,	a.zdzy_sum,	a.zdzhongy_sum,	a.zdNIPT_sum,	a.zdCMAzj_sum,	a.zdCMAws_sum,	a.zdbkLDT_sum,	a.zdzyLDT_sum,b.jcl,a.qt,a.finnal_ccusname
 FROM
 (SELECT CONCAT(RIGHT(YEAR(ddate),2),'Q',QUARTER(ddate)) as ddate,a.province,a.areadirector,
 ROUND(SUM(isum)/1000) as zt,
@@ -21,16 +21,17 @@ ROUND(SUM(IF(b.screen_class='筛查' AND level_one='新生儿' ,isum,0))/1000) a
 ROUND(SUM(IF(level_three='NIPT' OR  level_three='NIPT-Plus',isum,0))/1000) as NIPT_sum,
 ROUND(SUM(IF(cinv_key_2020='早孕' ,isum,0))/1000) as zdzy_sum,
 ROUND(SUM(IF(level_three='AFP/Free hCGβ' OR  level_three='UE3',isum,0))/1000) as zdzhongy_sum,
-ROUND(SUM(IF(level_three='NIPT' or  level_three='NIPT-Plus' ,isum,0))/1000) as zdNIPT_sum,
+ROUND(SUM(IF(cinv_key_2020='杰毅麦特NIPT' ,isum,0))/1000) as zdNIPT_sum,
 ROUND(SUM(IF(level_three='CMA' and  business_class='产品类' ,isum,0))/1000) as zdCMAzj_sum,
 ROUND(SUM(IF(level_three='CMA' and  business_class='LDT' ,isum,0))/1000) as zdCMAws_sum,
 ROUND(SUM(IF(cinv_key_2020='贝康LDT' and  level_three<>'CMA',isum,0))/1000) as zdbkLDT_sum,
-ROUND(SUM(IF(cinv_key_2020='甄元LDT' and  level_two<>'无创筛查',isum,0))/1000) as zdzyLDT_sum
+ROUND(SUM(IF(cinv_key_2020='甄元LDT' and  level_two<>'无创筛查',isum,0))/1000) as zdzyLDT_sum,
+ROUND(SUM(isum)/1000)-ROUND(SUM(IF(b.screen_class='筛查' AND b.level_one='产前' AND b.level_three not like 'NIPT%',isum,0))/1000) -ROUND(SUM(IF(b.screen_class='诊断' AND level_one='产前' ,isum,0))/1000)-ROUND(SUM(IF(b.screen_class='筛查' AND level_one='新生儿' ,isum,0))/1000)-ROUND(SUM(IF(level_three='NIPT' OR  level_three='NIPT-Plus',isum,0))/1000) as qt,a.finnal_ccusname
 FROM invoice_order a
 LEFT JOIN edw.map_inventory b
 ON a.cinvcode=b.bi_cinvcode
 WHERE province REGEXP '安徽|江苏|浙江|福建|山东|湖南|湖北|上海' and YEAR(ddate)>2018
-GROUP BY YEAR(ddate),QUARTER(ddate),province,areadirector)a
+GROUP BY YEAR(ddate),QUARTER(ddate),province,areadirector,finnal_ccusname)a
 LEFT JOIN
 (SELECT CONCAT(RIGHT(YEAR(ddate),2),'Q',QUARTER(ddate)) as ddate,province_ori,SUM(inum_person) as jcl
 FROM checklist
