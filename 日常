@@ -49,3 +49,36 @@ WHERE citemname='TSH'
 GROUP BY YEAR(ddate),QUARTER(ddate),province)c
 ON a.ddate=c.ddate AND a.province=c.province
 ORDER BY a.province,a.ddate
+
+#3、拜访次数
+drop table if exists test.crmbf_mid1_jsh;
+create table test.crmbf_mid1_jsh
+select @r:= case when @name=a.name and @bi_cusname=a.bi_cusname and DATEDIFF(s_dt,@e_dt)>1 then @r+1 else @r end as rownum
+       ,DATEDIFF(s_dt,@e_dt) as date_diff
+      ,@bi_cusname:= a.bi_cusname as bi_cusname
+      ,@name:= a.name as name
+      ,@e_dt:= a.e_dt as e_dt_old
+      ,s_dt
+      ,e_dt
+  from (select ccusname as bi_cusname ,yomifullname as name,actualstart as s_dt,actualend as e_dt from edw.crm_appointments where statuscode = '已完成' and actualstart >= '2020-01-01' order by bi_cusname,name,s_dt) a
+,(select @r:=1,@bi_cusname:='',@name:='',@e_dt:='1900-01-01') b
+;
+
+
+drop table if exists test.crmbf_mid2;
+create table test.crmbf_mid2 as 
+select @r:= case when @name=a.name and @bi_cusname=a.bi_cusname then @r+1 else 1 end as rownum
+      ,@bi_cusname:= a.bi_cusname as bi_cusname
+      ,@name:= a.name as name
+      ,s_dt
+      ,e_dt
+  from (select min(s_dt) as s_dt
+        		  ,max(e_dt) as e_dt
+        			,bi_cusname
+        			,name
+          from test.crmbf_mid1_jsh
+         group by bi_cusname,name,rownum
+         order by bi_cusname,name) a
+ ,(select @r:=1,@bi_cusname:='',@name:='') b
+;
+
