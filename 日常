@@ -11,9 +11,9 @@ ON a.cinvcode=b.bi_cinvcode
 ORDER BY cinvname;
 
 2.销售进度
-SELECT a.ddate,a.province,a.areadirector,a.zt,	a.cs_sum,	a.cz_sum,	a.xs_sum,	a.NIPT_sum,	a.zdzy_sum,	a.zdzhongy_sum,	a.zdNIPTqt_sum,	a.zdCMAzj_sum,	a.zdCMAws_sum,	a.zdbkLDT_sum,	a.zdzyLDT_sum,b.jcl,a.qt,a.finnal_ccusname,a.zdctxs_sum,a.zdcl_sum,a.zdVD_sum,zdjyNIPT_sum,c.fhl
+SELECT a.ddate,a.province,d.areadirector_m,a.zt,	a.cs_sum,	a.cz_sum,	a.xs_sum,	a.NIPT_sum,	a.zdzy_sum,	a.zdzhongy_sum,	a.zdNIPTqt_sum,	a.zdCMAzj_sum,	a.zdCMAws_sum,	a.zdbkLDT_sum,	a.zdzyLDT_sum,b.jcl,a.qt,a.finnal_ccusname,a.zdctxs_sum,a.zdcl_sum,a.zdVD_sum,a.zdzyNIPT_sum,c.fhl,a.zdhxCDS_sum
 FROM
-(SELECT CONCAT(RIGHT(YEAR(ddate),2),'Q',QUARTER(ddate)) as ddate,a.province,a.areadirector,
+(SELECT CONCAT(RIGHT(YEAR(ddate),2),'Q',QUARTER(ddate)) as ddate,a.province,
 ROUND(SUM(isum)/1000) as zt,
 ROUND((SUM(IF(b.screen_class='筛查' AND b.level_one='产前' ,isum,0))- SUM(IF(b.level_three like 'NIPT%',isum,0)))/1000) as cs_sum,
 ROUND(SUM(IF(b.screen_class='诊断' AND b.level_one='产前' ,isum,0))/1000) as cz_sum,
@@ -30,24 +30,37 @@ ROUND((SUM(IF(b.cinv_key_2020='甄元LDT' ,isum,0))-SUM(IF(b.level_three LIKE 'N
 ROUND(SUM(IF(b.level_three='TSH' OR b.level_three='17α-OH-P' OR b.level_three='PKU' OR b.level_three='G6PD',isum,0))/1000) as zdctxs_sum,
 ROUND(SUM(IF(b.level_three='串联试剂',isum,0))/1000) as zdcl_sum,
 ROUND(SUM(IF(b.cinv_key_2020='东方海洋VD',isum,0))/1000) as zdVD_sum,
-ROUND(SUM(IF(b.cinv_key_2020='杰毅麦特NIPT' ,isum,0))/1000) as zdjyNIPT_sum
+ROUND(SUM(IF(b.cinv_key_2020='杰毅麦特NIPT' ,isum,0))/1000+SUM(IF(b.level_three LIKE 'NIPT%' AND b.business_class='LDT' AND b.cinvbrand='甄元',isum,0))/1000) as zdzyNIPT_sum,
+ROUND(SUM(IF( cinvcode='YQ01001' OR cinvcode='YQ02321'  OR cinvcode='YQ02274'  OR cinvcode='YQ02303',isum,0))/1000)as zdhxCDS_sum
 FROM invoice_order a
 LEFT JOIN edw.map_inventory b
 ON a.cinvcode=b.bi_cinvcode
-WHERE province REGEXP '安徽|江苏|浙江|福建|山东|湖南|湖北|上海' and YEAR(ddate)>2018
-GROUP BY YEAR(ddate),QUARTER(ddate),province,areadirector,finnal_ccusname)a
+WHERE province REGEXP '安徽|江苏|浙江|福建|山东|湖南|湖北|上海' and YEAR(ddate)>2018 AND cohr<>'杭州贝生'
+GROUP BY YEAR(ddate),QUARTER(ddate),province,finnal_ccusname)a
 LEFT JOIN
-(SELECT CONCAT(RIGHT(YEAR(ddate),2),'Q',QUARTER(ddate)) as ddate,province_ori,SUM(inum_person) as jcl
+(SELECT CONCAT(RIGHT(YEAR(ddate),2),'Q',QUARTER(ddate)) as ddate,ccusname,SUM(inum_person) as jcl
 FROM checklist
 WHERE item_name='TSH'
-GROUP BY YEAR(ddate),QUARTER(ddate),province_ori)b
-ON a.ddate=b.ddate AND a.province=b.province_ori
+GROUP BY YEAR(ddate),QUARTER(ddate),ccusname)b
+ON a.ddate=b.ddate AND a.finnal_ccusname=b.ccusname
 LEFT JOIN
-(SELECT CONCAT(RIGHT(YEAR(ddate),2),'Q',QUARTER(ddate)) as ddate,province,ROUND(SUM(inum_person)) as fhl
+(SELECT CONCAT(RIGHT(YEAR(ddate),2),'Q',QUARTER(ddate)) as ddate,finnal_ccusname,ROUND(SUM(inum_person)) as fhl
 FROM outdepot_order
 WHERE citemname='TSH'
-GROUP BY YEAR(ddate),QUARTER(ddate),province)c
-ON a.ddate=c.ddate AND a.province=c.province
+GROUP BY YEAR(ddate),QUARTER(ddate),finnal_ccusname)c
+ON a.ddate=c.ddate AND a.finnal_ccusname=c.finnal_ccusname
+
+LEFT JOIN
+(SELECT DISTINCT ccusname,
+CASE  WHEN  ccusname='东南大学附属中大医院' THEN '刘健'
+			WHEN ccusname='南京医科大学第二附属医院' THEN '刘健'
+			WHEN ccusname='南京市儿童医院' THEN '刘健'
+			WHEN ccusname='湖南省儿童医院' THEN '黄杰灵'
+			ELSE areadirector
+END areadirector_m
+FROM cusitem_person
+WHERE end_dt>'2020-03-01' )d
+ON a.finnal_ccusname=d.ccusname
 ORDER BY a.province,a.ddate
 
 #3、拜访次数
