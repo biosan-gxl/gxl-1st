@@ -138,3 +138,44 @@ WHERE end_dt>'2020-03-01' )d
 ON a.bi_cusname=d.ccusname
 ORDER BY a.province,a.ddate
 
+#发货额
+SELECT a.ddate,a.province,d.areadirector_m,a.zt,	a.cs_sum,	a.cz_sum,	a.xs_sum,	a.NIPT_sum,	a.zdzy_sum,	a.zdzhongy_sum,	a.zdNIPTqt_sum,	a.zdCMAzj_sum,	a.zdCMAws_sum,	a.zdbkLDT_sum,	a.zdzyLDT_sum,''jcl,a.qt,a.finnal_ccusname,a.zdctxs_sum,a.zdcl_sum,a.zdVD_sum,a.zdzyNIPT_sum,''fhl,a.zdhxCDS_sum
+FROM
+(SELECT CONCAT(RIGHT(YEAR(ddate),2),'Q',QUARTER(ddate)) as ddate,a.province,
+ROUND(SUM(isum)/1000) as zt,
+ROUND((SUM(IF(b.screen_class='筛查' AND b.level_one='产前' ,isum,0))- SUM(IF(b.level_three like 'NIPT%',isum,0)))/1000) as cs_sum,
+ROUND(SUM(IF(b.screen_class='诊断' AND b.level_one='产前' ,isum,0))/1000) as cz_sum,
+ROUND(SUM(IF(b.screen_class='筛查' AND b.level_one='新生儿' ,isum,0))/1000) as xs_sum,
+ROUND(SUM(IF(b.level_three='NIPT' OR  b.level_three='NIPT-Plus',isum,0))/1000) as NIPT_sum,
+ROUND(SUM(IF(b.cinv_key_2020='早孕' ,isum,0))/1000) as zdzy_sum,
+ROUND(SUM(IF(b.level_three='AFP/Free hCGβ' OR  b.level_three='UE3',isum,0))/1000) as zdzhongy_sum,
+ROUND((SUM(IF(b.level_three LIKE 'NIPT%' ,isum,0))-SUM(IF(b.cinv_key_2020='杰毅麦特NIPT' ,isum,0)))/1000) as zdNIPTqt_sum,
+ROUND(SUM(IF(b.level_three='CMA' and  b.business_class='产品类' ,isum,0))/1000) as zdCMAzj_sum,
+ROUND(SUM(IF(b.level_three='CMA' and  b.business_class='LDT' ,isum,0))/1000) as zdCMAws_sum,
+ROUND((SUM(IF(b.cinv_key_2020='贝康LDT',isum,0))-SUM(IF(b.level_three='CMA'  AND b.business_class='LDT' AND b.cinvbrand='贝康',isum,0)))/1000) as zdbkLDT_sum,
+ROUND((SUM(IF(b.cinv_key_2020='甄元LDT' ,isum,0))-SUM(IF(b.level_three LIKE 'NIPT%' AND b.business_class='LDT' AND b.cinvbrand='甄元',isum,0)))/1000) as zdzyLDT_sum,
+ ROUND(SUM(isum)/1000-SUM(IF(b.screen_class='筛查' AND b.level_one='产前' ,isum,0))/1000-SUM(IF(b.screen_class='诊断' AND b.level_one='产前' ,isum,0))/1000-SUM(IF(b.screen_class='筛查' AND b.level_one='新生儿' ,isum,0))/1000) as qt,a.finnal_ccusname,
+ROUND(SUM(IF(b.level_three='TSH' OR b.level_three='17α-OH-P' OR b.level_three='PKU' OR b.level_three='G6PD',isum,0))/1000) as zdctxs_sum,
+ROUND(SUM(IF(b.level_three='串联试剂',isum,0))/1000) as zdcl_sum,
+ROUND(SUM(IF(b.cinv_key_2020='东方海洋VD',isum,0))/1000) as zdVD_sum,
+ROUND(SUM(IF(b.cinv_key_2020='杰毅麦特NIPT' ,isum,0))/1000+SUM(IF(b.level_three LIKE 'NIPT%' AND b.business_class='LDT' AND b.cinvbrand='甄元',isum,0))/1000) as zdzyNIPT_sum,
+ROUND(SUM(IF( cinvcode='YQ01001' OR cinvcode='YQ02321'  OR cinvcode='YQ02274'  OR cinvcode='YQ02303',isum,0))/1000)as zdhxCDS_sum
+FROM dispatch_order a
+LEFT JOIN edw.map_inventory b
+ON a.cinvcode=b.bi_cinvcode
+WHERE province REGEXP '安徽|江苏|浙江|福建|山东|湖南|湖北|上海'  
+GROUP BY YEAR(ddate),QUARTER(ddate),province,finnal_ccusname)a
+
+
+LEFT JOIN
+(SELECT DISTINCT ccusname,
+CASE  WHEN  ccusname='东南大学附属中大医院' THEN '刘健'
+			WHEN ccusname='南京医科大学第二附属医院' THEN '刘健'
+			WHEN ccusname='南京市儿童医院' THEN '刘健'
+			WHEN ccusname='湖南省儿童医院' THEN '黄杰灵'
+			ELSE areadirector
+END areadirector_m
+FROM pdm.cusitem_person
+WHERE end_dt>'2020-03-01' )d
+ON a.finnal_ccusname=d.ccusname
+ORDER BY a.province,a.ddate
