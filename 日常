@@ -179,3 +179,18 @@ FROM pdm.cusitem_person
 WHERE end_dt>'2020-03-01' )d
 ON a.finnal_ccusname=d.ccusname
 ORDER BY a.province,a.ddate
+
+#投保前后数量变化
+SELECT a.company_exp,a.item_name,IF(jg=-5,inum_person,0) as l5,IF(jg=-4,inum_person,0) as l4,IF(jg=-3,inum_person,0) as l3,IF(jg=-2,inum_person,0) as l2,IF(jg=-1,inum_person,0) as l1,IF(jg=0,inum_person,0) as l0,IF(jg=1,inum_person,0) as r1,IF(jg=2,inum_person,0) as r2,IF(jg=3,inum_person,0) as r3,IF(jg=4,inum_person,0) as r4,IF(jg=5,inum_person,0) as r5
+FROM 
+
+(SELECT a.company_exp,a.item_name,a.inum_person,TIMESTAMPDIFF(month,b.ddate,a.ddate) as jg
+FROM pdm.checklist a
+LEFT JOIN
+(SELECT bi_cusname,IF(LEFT(item_name,2)='串联','串联试剂',LEFT(item_name,4)) as item_name,MIN(ddate) as ddate
+FROM x_insure_cover
+GROUP BY bi_cusname,LEFT(item_name,4))b
+ON a.company_exp=b.bi_cusname AND a.item_name=b.item_name
+WHERE b.bi_cusname is not null AND b.item_name is not null AND a.cbustype='产品类')a
+ORDER BY a.company_exp,a.item_name
+
