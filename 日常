@@ -73,28 +73,29 @@ select @r:= case when @name=a.name and @bi_cusname=a.bi_cusname and DATEDIFF(s_d
       ,@e_dt:= a.e_dt as e_dt_old
       ,s_dt
       ,e_dt
-  from (select ccusname as bi_cusname ,yomifullname as name,actualstart as s_dt,actualend as e_dt from edw.crm_appointments where statuscode = '已完成' and actualstart >= '2020-01-01' order by bi_cusname,name,s_dt) a
+  from (select ccusname as bi_cusname ,yomifullname as name,actualstart as s_dt,actualend as e_dt from edw.crm_appointments where statuscode = '已完成'  order by bi_cusname,name,s_dt) a
 ,(select @r:=1,@bi_cusname:='',@name:='',@e_dt:='1900-01-01') b
 ;
 
 
 drop table if exists test.crmbf_mid2;
 create table test.crmbf_mid2 as 
-select @r:= case when @name=a.name and @bi_cusname=a.bi_cusname then @r+1 else 1 end as rownum
+select @r:= case when @name=a.name and @bi_cusname=a.bi_cusname and @year_=a.year_ then @r+1 else 1 end as rownum
       ,@bi_cusname:= a.bi_cusname as bi_cusname
       ,@name:= a.name as name
+			,@year_:=a.year_ as year
       ,s_dt
       ,e_dt
   from (select min(s_dt) as s_dt
         		  ,max(e_dt) as e_dt
         			,bi_cusname
         			,name
+							,year(min(s_dt)) as year_
           from test.crmbf_mid1_jsh
          group by bi_cusname,name,rownum
          order by bi_cusname,name) a
- ,(select @r:=1,@bi_cusname:='',@name:='') b
+ ,(select @r:=1,@bi_cusname:='',@name:='',@year_:='') b
 ;
-
 
 #计划额
 SELECT a.ddate,a.province,d.areadirector_m,a.zt,	a.cs_sum,	a.cz_sum,	a.xs_sum,	a.NIPT_sum,	a.zdzy_sum,	a.zdzhongy_sum,	a.zdNIPTqt_sum,	a.zdCMAzj_sum,	a.zdCMAws_sum,	a.zdbkLDT_sum,	a.zdzyLDT_sum,''jcl,a.qt,a.bi_cusname,a.zdctxs_sum,a.zdcl_sum,a.zdVD_sum,a.zdzyNIPT_sum,''fhl,a.zdhxCDS_sum
