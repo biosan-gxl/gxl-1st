@@ -135,3 +135,6 @@ WHERE (sales_dept = '销售一部' or sales_dept = '销售二部') and screen_cl
 SELECT sum(isum)
 FROM main_item
  WHERE  screen_class='诊断'
+ 
+ 
+ #增加测试
