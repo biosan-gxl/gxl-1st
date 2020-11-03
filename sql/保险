@@ -1,0 +1,57 @@
+#投保前后检测量的变化
+SELECT a.province_ori,a.ccusname,a.item_name,SUM(a.inum_person),IF(TIMESTAMPDIFF(MONTH,b.ddate,a.ddate)<0,floor(TIMESTAMPDIFF(MONTH,b.ddate,a.ddate)/3),CEILING((TIMESTAMPDIFF(MONTH,b.ddate,a.ddate)+1)/3)) as jg
+FROM pdm.checklist a
+LEFT JOIN
+(SELECT bi_cusname,IF(LEFT(item_name,2)='串联','串联试剂',LEFT(item_name,4)) as item_name,MIN(ddate) as ddate
+FROM edw.x_insure_cover
+WHERE insure_num>0
+GROUP BY bi_cusname,LEFT(item_name,4))b
+ON a.ccusname=b.bi_cusname AND a.item_name=b.item_name
+WHERE b.bi_cusname is not null AND b.item_name is not null AND a.cbustype='产品类'
+GROUP BY a.ccusname,a.item_name,jg
+ORDER BY a.ccusname,jg;
+
+
+#投保前后每个月的检测量变化
+SELECT a.ccusname,a.item_name,a.inum_person,TIMESTAMPDIFF(MONTH,b.ddate,a.ddate) as jgy
+FROM pdm.checklist a
+LEFT JOIN
+(SELECT bi_cusname,IF(LEFT(item_name,2)='串联','串联试剂',LEFT(item_name,4)) as item_name,MIN(ddate) as ddate
+FROM x_insure_cover
+WHERE insure_num>0
+GROUP BY bi_cusname,LEFT(item_name,4))b
+ON a.ccusname=b.bi_cusname AND a.item_name=b.item_name
+WHERE b.bi_cusname is not null AND b.item_name is not null 
+ORDER BY a.ccusname,jgy;
+
+#投保前后发货额的变化，按季度
+SELECT a.province,a.finnal_ccusname,a.item_name,SUM(a.isum),IF(TIMESTAMPDIFF(MONTH,b.ddate,a.ddate)<0,CEILING(TIMESTAMPDIFF(MONTH,b.ddate,a.ddate)/3),FLOOR(TIMESTAMPDIFF(MONTH,b.ddate,a.ddate)/3)) as jg
+FROM pdm.dispatch_order a
+LEFT JOIN
+(SELECT bi_cusname,IF(LEFT(item_name,2)='串联','串联试剂',LEFT(item_name,4)) as item_name,MIN(ddate) as ddate
+FROM x_insure_cover
+WHERE insure_num>0
+GROUP BY bi_cusname,LEFT(item_name,4))b
+ON a.finnal_ccusname=b.bi_cusname AND a.item_name=b.item_name
+WHERE b.bi_cusname is not null AND b.item_name is not null 
+GROUP BY a.finnal_ccusname,a.item_name,jg
+ORDER BY a.finnal_ccusname,jg;
+
+#投保前后诊断检测量的变化，按季度
+
+SELECT a.province_ori,a.ccusname,IF(a.item_name='NIPT','产诊','新诊'),SUM(a.inum_person),
+IF(TIMESTAMPDIFF(MONTH,b.ddate,a.ddate)<0,floor(TIMESTAMPDIFF(MONTH,b.ddate,a.ddate)/3),CEILING((TIMESTAMPDIFF(MONTH,b.ddate,a.ddate)+1)/3)) as jg
+FROM 
+(SELECT ddate,province_ori,ccusname,IF(item_name='GCMS' OR item_name='遗传代谢病panel','串联试剂','NIPT')item_name,inum_person
+FROM pdm.checklist
+WHERE item_name REGEXP 'FISH|CMA|BoBs|GCMS|遗传代谢病panel')a
+
+LEFT JOIN 
+(SELECT bi_cusname,IF(LEFT(item_name,2)='串联','串联试剂',LEFT(item_name,4)) as item_name,MIN(ddate) as ddate
+FROM edw.x_insure_cover
+WHERE insure_num>0
+GROUP BY bi_cusname,LEFT(item_name,4))b
+ON a.ccusname=b.bi_cusname AND a.item_name=b.item_name
+WHERE b.bi_cusname is not null AND b.item_name is not null 
+GROUP BY a.ccusname,a.item_name,jg
+ORDER BY a.ccusname,jg;
