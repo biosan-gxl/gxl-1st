@@ -1,29 +1,30 @@
 #已发货未开票的跟踪
 DROP TABLE if EXISTS shujuzu.contract_price0;
-CREATE  TABLE  shujuzu.contract_price0 as
+CREATE TEMPORARY TABLE  shujuzu.contract_price0 as
 SELECT a.finnal_ccuscode as cuscode
-,a.finnal_ccusname as cusname
-,a.cinvcode 
-,a.cinvname 
-,a.new_cdefine12 as cdefine12
-,a.new_name as strcontractid
-,a.new_dstartdate as strcontractstartdate
-,cast( a.new_itaxprice/b.inum_unit_person as DECIMAL(10,1)) as contract_price_person    
+       ,a.finnal_ccusname as cusname
+       ,a.cinvcode 
+       ,a.cinvname 
+       ,a.new_cdefine12 as cdefine12
+       ,a.new_name as strcontractid
+       ,a.new_dstartdate as strcontractstartdate
+       ,cast( a.new_itaxprice/b.inum_unit_person as DECIMAL(10,1)) as contract_price_person
+       ,statuscode
 FROM  edw.crm_contract a
 LEFT JOIN edw.map_inventory b
 ON a.cinvcode = b.bi_cinvcode;
 
 DROP TABLE if EXISTS shujuzu.contract_price1;
-CREATE  TABLE  shujuzu.contract_price1 as
+CREATE TEMPORARY TABLE  shujuzu.contract_price1 as
 SELECT  CONCAT(cuscode,cinvcode) as concatid
-,cuscode
-,cusname
-,cinvcode
-,cinvname
-,strcontractid
-,strcontractstartdate
-,cdefine12
-,max(contract_price_person) as contract_price_person  
+       ,cuscode
+       ,cusname
+       ,cinvcode
+       ,cinvname
+       ,strcontractid
+       ,strcontractstartdate
+       ,cdefine12
+       ,max(contract_price_person) as contract_price_person  
 FROM shujuzu.contract_price0
 WHERE cuscode is not null and cinvcode is not null and cinvcode <>'请核查'
 GROUP BY cusname,cinvcode,strcontractstartdate; #避免一个合同里有2个个产品价格
@@ -35,24 +36,38 @@ CREATE index index_contract_price1_cinvcode on shujuzu.contract_price1(cinvcode)
 
 #求每个客户产品的最新日期
 DROP TABLE if EXISTS shujuzu.contract_price2;
-CREATE  TABLE  shujuzu.contract_price2 as
+CREATE TEMPORARY TABLE  shujuzu.contract_price2 as
 SELECT concatid
 ,max(strcontractstartdate) as star_max 
 FROM shujuzu.contract_price1
 GROUP BY concatid;
 
+#求在用的合同价
+DROP TABLE if EXISTS shujuzu.contract_price20;
+CREATE TEMPORARY TABLE  shujuzu.contract_price20 as
+SELECT 
+     CONCAT(cuscode,cinvcode) as concatid
+		 ,a.cuscode
+     ,a.cusname
+     ,a.cinvcode 
+     ,a.cinvname
+     ,GROUP_CONCAT(DISTINCT contract_price_person) as effect_contract_price#在用的合同价
+FROM shujuzu.contract_price0 a
+WHERE statuscode = '在用'
+GROUP BY a.cuscode,a.cinvcode;
+
 
 #最新价格（若有两个价格，取价格较大的）
 DROP TABLE if EXISTS shujuzu.contract_price3; 
-CREATE  TABLE  shujuzu.contract_price3 as
+CREATE TEMPORARY TABLE  shujuzu.contract_price3 as
 SELECT  a.concatid
-,a.cuscode
-,a.cusname
-,a.cinvcode
-,a.cinvname
-,a.strcontractstartdate
-,a.cdefine12
-,a.contract_price_person as contract_price_person_new  
+      ,a.cuscode
+      ,a.cusname
+      ,a.cinvcode
+      ,a.cinvname
+      ,a.strcontractstartdate
+      ,a.cdefine12
+      ,a.contract_price_person as contract_price_person_new  
 FROM shujuzu.contract_price1 a
 LEFT JOIN shujuzu.contract_price2 b
 ON a.concatid = b.concatid
@@ -60,25 +75,25 @@ WHERE a.strcontractstartdate = b.star_max;
 
 #最大价格
 DROP TABLE if EXISTS shujuzu.contract_price4;
-CREATE  TABLE  shujuzu.contract_price4 as
+CREATE TEMPORARY TABLE  shujuzu.contract_price4 as
 SELECT  concatid
-,cuscode
-,cusname
-,cinvcode
-,cinvname
-,max(contract_price_person) as contract_price_person_max 
+     ,cuscode
+     ,cusname
+     ,cinvcode
+     ,cinvname
+     ,max(contract_price_person) as contract_price_person_max 
 FROM shujuzu.contract_price1
 GROUP BY concatid;
 
 DROP TABLE if EXISTS shujuzu.contract_price5;
-CREATE  TABLE  shujuzu.contract_price5 as
+CREATE TEMPORARY TABLE  shujuzu.contract_price5 as
 SELECT a.cuscode
-,a.cusname
-,a.cinvcode
-,a.cinvname
-,a.strcontractstartdate
-,a.cdefine12,a.contract_price_person_new
-,b.contract_price_person_max
+     ,a.cusname
+     ,a.cinvcode
+     ,a.cinvname
+     ,a.strcontractstartdate
+     ,a.cdefine12     ,a.contract_price_person_new
+     ,b.contract_price_person_max
 FROM shujuzu.contract_price3 a
 LEFT JOIN shujuzu.contract_price4 b
 ON a.concatid = b.concatid;
@@ -86,27 +101,27 @@ ON a.concatid = b.concatid;
 
 #最后一次出库日期
 DROP TABLE if EXISTS shujuzu.out_invoice2; 
-CREATE  TABLE  shujuzu.out_invoice2 as 
+CREATE TEMPORARY TABLE  shujuzu.out_invoice2 as 
 SELECT finnal_ccusname as ccusname,cinvcode,max(ddate) as last_out_dt,min(ddate) as first_out_dt
 FROM pdm.outdepot_order
 GROUP BY finnal_ccusname,cinvcode;
 
 #最后一次开票日期
 DROP TABLE if EXISTS shujuzu.out_invoice3;
-CREATE  TABLE  shujuzu.out_invoice3 as 
+CREATE TEMPORARY TABLE  shujuzu.out_invoice3 as 
 SELECT finnal_ccusname as ccusname,cinvcode,max(ddate) as last_invoice_dt
 FROM pdm.invoice_order
 GROUP BY finnal_ccusname,cinvcode;
 #关联已发货未开票的表
 /*DROP TABLE if EXISTS shujuzu.out_invoice4;
-CREATE  TABLE  shujuzu.out_invoice4 as
+CREATE TEMPORARY TABLE  shujuzu.out_invoice4 as
 SELECT province,finnal_ccuscode,finnal_ccusname as ccusname,cinvcode,cinvname,price,sum(iquantity-isettlequantity) as iquantity_noinvoice,sum((iquantity-isettlequantity)*price) as isum_noinvoice
 FROM pdm.out_inv_relation a
 GROUP BY finnal_ccusname,cinvcode;*/
 
 #因姜孙惠pdm.out_inv_relation里的价格使用直接客户匹配的，我们需要用最终客户匹配
 DROP TABLE if EXISTS shujuzu.out_inv_relation1;
-CREATE  TABLE  shujuzu.out_inv_relation1 as
+CREATE TEMPORARY TABLE  shujuzu.out_inv_relation1 as
 SELECT a.db,a.province,a.ccusname,a.ccuscode,a.finnal_ccusname,a.ddate,a.cinvcode,a.cinvname,a.iquantity,a.isettlequantity,b.itaxunitprice as price
 FROM pdm.out_inv_relation a
 LEFT JOIN (SELECT * FROM pdm.invoice_price WHERE state = '最后一次价格') b
@@ -125,7 +140,7 @@ WHERE a.ccuscode not like 'GL%';*/
 
 
 DROP TABLE if EXISTS shujuzu.out_invoice5;
-CREATE  TABLE  shujuzu.out_invoice5 as
+CREATE TEMPORARY TABLE  shujuzu.out_invoice5 as
 SELECT if(a.db='UFDATA_168_2019','杭州贝生','博圣体系') as cohr,a.province,a.ccusname,a.finnal_ccusname,a.ddate,a.cinvcode,a.cinvname,price,iquantity,isettlequantity,b.last_invoice_dt,c.last_out_dt,c.first_out_dt
 FROM shujuzu.out_inv_relation1 a
 LEFT JOIN shujuzu.out_invoice3 b
@@ -135,7 +150,7 @@ ON a.finnal_ccusname = c.ccusname and a.cinvcode = c.cinvcode
 WHERE a.ccuscode not like 'GL%';
 
 DROP TABLE if EXISTS shujuzu.out_invoice6;
-CREATE  TABLE  shujuzu.out_invoice6 as
+CREATE TEMPORARY TABLE  shujuzu.out_invoice6 as
 SELECT a.*,b.contract_price_person_new,b.contract_price_person_max,b.strcontractstartdate,b.cdefine12
 FROM shujuzu.out_invoice5 a
 LEFT JOIN shujuzu.contract_price5 b
@@ -143,14 +158,14 @@ ON a.finnal_ccusname = b.cusname and a.cinvcode = b.cinvcode;
 
 
 DROP TABLE if EXISTS shujuzu.out_invoice7;
-CREATE  TABLE  shujuzu.out_invoice7 as
+CREATE TEMPORARY TABLE  shujuzu.out_invoice7 as
 SELECT a.cohr,a.province,a.ccusname,a.finnal_ccusname,a.ddate,a.cinvcode,a.cinvname,b.level_three as item_name,price/b.inum_unit_person as person_price,iquantity*b.inum_unit_person as iquantity_person ,isettlequantity*b.inum_unit_person as isettlequantity_person,a.last_invoice_dt,a.last_out_dt,a.first_out_dt,a.contract_price_person_new,a.contract_price_person_max,a.strcontractstartdate,a.cdefine12
 FROM shujuzu.out_invoice6 a
 LEFT JOIN edw.map_inventory b
 ON a.cinvcode = b.bi_cinvcode;
 
-DROP TABLE if EXISTS shujuzu.out_invoice;
-CREATE TABLE  shujuzu.out_invoice as
+DROP TABLE if EXISTS shujuzu.out_invoice8;
+CREATE TEMPORARY TABLE  shujuzu.out_invoice8 as
 SELECT *
 ,case when contract_price_person_new= 0 and contract_price_person_max=0 and ddate >= strcontractstartdate then '合同签订价格为0'
       when contract_price_person_new= 0 and contract_price_person_max=0 and ddate < strcontractstartdate then '补签合同，价格为0'
@@ -158,6 +173,15 @@ SELECT *
       when contract_price_person_new= 0 and contract_price_person_max>0 and ddate < strcontractstartdate then '之前有非0合同价，后补签价格为0，该记录为补签之前' 
 			when person_price is null  and last_invoice_dt is null and contract_price_person_new is null then '无合同，且从未开票' end as beizhu
 FROM shujuzu.out_invoice7 a;
+
+#加上在用合同价
+DROP TABLE if EXISTS shujuzu.out_invoice;
+CREATE  TABLE  shujuzu.out_invoice as
+SELECT a.*,b.effect_contract_price
+FROM shujuzu.out_invoice8 a
+LEFT JOIN shujuzu.contract_price20 b
+on a.finnal_ccusname = b.cusname and a.cinvcode = b.cinvcode; 
+
 
 
 #按检测量开票的备注
