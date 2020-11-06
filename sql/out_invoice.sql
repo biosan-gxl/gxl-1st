@@ -258,6 +258,7 @@ update shujuzu.out_invoice set beizhu='按检测量开票' where finnal_ccusname
 #更新最后一次开票价，孙惠加工的最后一次价格是非0价格，如果有开票，但一直是开票价为0，则将最后一次开票价更新为0
 UPDATE shujuzu.out_invoice set person_price = 0 WHERE person_price is null and last_invoice_dt is not null;
 
+
 #复核
 SELECT sum(iquantity_person)
 FROM shujuzu.out_invoice;
