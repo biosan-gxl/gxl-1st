@@ -1,6 +1,6 @@
 #已发货未开票的跟踪
 DROP TABLE if EXISTS shujuzu.contract_price0;
-CREATE  TABLE  shujuzu.contract_price0 as
+CREATE TEMPORARY TABLE   shujuzu.contract_price0 as
 SELECT a.finnal_ccuscode as cuscode
       ,a.finnal_ccusname as cusname
       ,a.cinvcode 
@@ -15,7 +15,7 @@ ON a.cinvcode = b.bi_cinvcode
 ;
 
 DROP TABLE if EXISTS shujuzu.contract_price1;
-CREATE  TABLE  shujuzu.contract_price1 as
+CREATE TEMPORARY TABLE   shujuzu.contract_price1 as
 SELECT  CONCAT(cuscode,cinvcode) as concatid
        ,cuscode
        ,cusname
@@ -37,7 +37,7 @@ CREATE index index_contract_price1_cinvcode on shujuzu.contract_price1(cinvcode)
 
 #求每个客户产品的最新日期
 DROP TABLE if EXISTS shujuzu.contract_price2;
-CREATE  TABLE  shujuzu.contract_price2 as
+CREATE TEMPORARY TABLE   shujuzu.contract_price2 as
 SELECT concatid
 				,max(strcontractstartdate) as star_max 
 FROM shujuzu.contract_price1
@@ -48,7 +48,7 @@ GROUP BY concatid
 
 #最新价格（若有两个价格，取价格较大的）
 DROP TABLE if EXISTS shujuzu.contract_price3; 
-CREATE  TABLE  shujuzu.contract_price3 as
+CREATE TEMPORARY TABLE   shujuzu.contract_price3 as 
 SELECT  a.concatid
        ,a.cuscode
        ,a.cusname
@@ -65,7 +65,7 @@ WHERE a.strcontractstartdate = b.star_max
 
 #最大价格
 DROP TABLE if EXISTS shujuzu.contract_price4;
-CREATE  TABLE  shujuzu.contract_price4 as
+CREATE TEMPORARY TABLE   shujuzu.contract_price4 as
 SELECT  concatid
        ,cuscode
        ,cusname
@@ -77,7 +77,7 @@ GROUP BY concatid
 ;
 
 DROP TABLE if EXISTS shujuzu.contract_price5;
-CREATE  TABLE  shujuzu.contract_price5 as
+CREATE TEMPORARY TABLE   shujuzu.contract_price5 as
 SELECT a.cuscode
        ,a.cusname
        ,a.cinvcode
@@ -93,7 +93,7 @@ ON a.concatid = b.concatid
 
 #最后一次出库日期
 DROP TABLE if EXISTS shujuzu.out_invoice2; 
-CREATE  TABLE  shujuzu.out_invoice2 as 
+CREATE TEMPORARY TABLE   shujuzu.out_invoice2 as 
 SELECT finnal_ccusname as ccusname
       ,cinvcode
       ,max(ddate) as last_out_dt
@@ -104,7 +104,7 @@ GROUP BY finnal_ccusname,cinvcode
 
 #最后一次开票日期
 DROP TABLE if EXISTS shujuzu.out_invoice3;
-CREATE  TABLE  shujuzu.out_invoice3 as 
+CREATE TEMPORARY TABLE   shujuzu.out_invoice3 as 
 SELECT finnal_ccusname as ccusname
       ,cinvcode
       ,max(ddate) as last_invoice_dt
@@ -113,14 +113,14 @@ GROUP BY finnal_ccusname,cinvcode
 ;
 #关联已发货未开票的表
 /*DROP TABLE if EXISTS shujuzu.out_invoice4;
-CREATE  TABLE  shujuzu.out_invoice4 as
+CREATE TEMPORARY TABLE   shujuzu.out_invoice4 as
 SELECT province,finnal_ccuscode,finnal_ccusname as ccusname,cinvcode,cinvname,price,sum(iquantity-isettlequantity) as iquantity_noinvoice,sum((iquantity-isettlequantity)*price) as isum_noinvoice
 FROM pdm.out_inv_relation a
 GROUP BY finnal_ccusname,cinvcode;*/
 
 #因姜孙惠pdm.out_inv_relation里的价格使用直接客户匹配的，我们需要用最终客户匹配
 DROP TABLE if EXISTS shujuzu.out_inv_relation1;
-CREATE  TABLE  shujuzu.out_inv_relation1 as
+CREATE TEMPORARY TABLE   shujuzu.out_inv_relation1 as
 SELECT a.db
        ,a.province
        ,a.ccusname
@@ -150,7 +150,7 @@ WHERE a.ccuscode not like 'GL%';*/
 
 
 DROP TABLE if EXISTS shujuzu.out_invoice5;
-CREATE  TABLE  shujuzu.out_invoice5 as
+CREATE TEMPORARY TABLE   shujuzu.out_invoice5 as
 SELECT if(a.db='UFDATA_168_2019','杭州贝生','博圣体系') as cohr
       ,a.province
       ,a.ccusname
@@ -173,7 +173,7 @@ WHERE a.ccuscode not like 'GL%'
 ;
 
 DROP TABLE if EXISTS shujuzu.out_invoice6;
-CREATE  TABLE  shujuzu.out_invoice6 as
+CREATE TEMPORARY TABLE   shujuzu.out_invoice6 as
 SELECT a.*
       ,b.contract_price_person_new
       ,b.contract_price_person_max
@@ -186,7 +186,7 @@ ON a.finnal_ccusname = b.cusname and a.cinvcode = b.cinvcode
 
 
 DROP TABLE if EXISTS shujuzu.out_invoice7;
-CREATE  TABLE  shujuzu.out_invoice7 as
+CREATE TEMPORARY TABLE   shujuzu.out_invoice7 as
 SELECT a.cohr
       ,a.province
       ,a.ccusname
