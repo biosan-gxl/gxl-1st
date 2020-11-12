@@ -1,5 +1,5 @@
 DROP table if EXISTS main_item1;
-CREATE  TABLE main_item1 as 
+CREATE TEMPORARY TABLE main_item1 as 
 SELECT a.*
 			,year(ddate) as year_
 			,month(ddate) as month_
@@ -17,8 +17,8 @@ LEFT JOIN edw.map_inventory b
 ON a.cinvcode = b.bi_cinvcode
 WHERE b.cinv_key_2020 REGEXP '甄元LDT|杰毅麦特NIPT|服务_软件|东方海洋VD' or (a.item_code = 'CQ0706' and b.cinv_key_2020 is not null) ;
 
-DROP table if EXISTS main_item2;
-CREATE  TABLE main_item2 as 
+DROP table if EXISTS main_item01;
+CREATE TEMPORARY TABLE main_item01 as 
 SELECT a.year_
 			,a.month_
 			,a.sales_dept
@@ -31,7 +31,7 @@ SELECT a.year_
 			,a.screen_class
 			,a.equipment
 			,sum(a.isum) as isum
-			,sum(a.isum_budget) as isum_budget
+			,sum(a.isum_budget) as isum_budget 
 			,'q3' as quarter
 			,main_item
 FROM main_item1 a
@@ -39,7 +39,7 @@ WHERE quarter = 3 and sales_dept = '销售一部' or sales_dept = '销售二部'
 GROUP BY year_,month_,sales_dept,sales_region_new,areadirector,cverifier,cinv_key_2020,screen_class,main_item;
 
 drop table if exists shujuzu.bonus_base_ehr;
-CREATE  TABLE if not exists shujuzu.bonus_base_ehr
+CREATE TEMPORARY TABLE if not exists shujuzu.bonus_base_ehr
 select 
 	   name 
     ,employeestatus
@@ -52,8 +52,8 @@ from pdm.ehr_employee
 where employeestatus = '离职' and year(lastworkdate) = 2020; 
 alter table report.bonus_base_ehr add index (name);
 
-DROP table if EXISTS main_item;
-CREATE  TABLE main_item as 
+DROP table if EXISTS main_item2;
+CREATE  TABLE main_item2 as 
 SELECT  a.year_
 				,a.month_
 				,a.sales_dept
@@ -75,7 +75,7 @@ SELECT  a.year_
 					,c.lastworkdate as lastworkdate_cver
 					,c.month_ as month_cver
 				,a.main_item
-FROM main_item2 a
+FROM main_item01 a
 left join shujuzu.bonus_base_ehr as b 
 on a.areadirector = b.name 
 left join shujuzu.bonus_base_ehr as c 
@@ -123,8 +123,7 @@ on a.cverifier = c.name ;
 
 SELECT sum(isum)
 FROM 
-		 report.bonus_base_person a
-		
+		 report.bonus_base_person a		
 LEFT JOIN edw.map_inventory b
 ON a.cinvcode = b.bi_cinvcode
 WHERE (b.cinv_key_2020 REGEXP '甄元LDT|杰毅麦特NIPT|服务_软件|东方海洋VD' or (a.item_code = 'CQ0706' and b.cinv_key_2020 is not null)) and ddate >='2020-07-01' and ddate <= '2020-9-30'  and (sales_dept = '销售一部' or sales_dept = '销售二部') or (a.item_code = 'CQ0706' and b.cinv_key_2020 is not null) ;
