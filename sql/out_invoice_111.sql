@@ -473,7 +473,7 @@ SELECT a.subsidiary
  FROM shujuzu.out_invoice_pre_111 a
  WHERE cstcode <> '关联销售';
  
- 
+ UPDATE shujuzu.out_invoice_111 set last_invoice_price_person = 0 WHERE last_invoice_dt is not null and last_invoice_price_person is null;
  
  
  SELECT sum((if(iquantity is null,0,iquantity)-if(fsettleqty is null,0,fsettleqty))*price_crm) FROM db_111.sales_devdis_relation
