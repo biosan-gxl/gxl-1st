@@ -118,7 +118,7 @@ SELECT province,finnal_ccuscode,finnal_ccusname as ccusname,cinvcode,cinvname,pr
 FROM pdm.out_inv_relation a
 GROUP BY finnal_ccusname,cinvcode;*/
 
-#因姜孙惠pdm.out_inv_relation里的价格使用直接客户匹配的，我们需要用最终客户匹配
+#因姜孙惠pdm.out_inv_relation里的价格使用直接客户匹配的，我们需要用最终客户匹配—+直接客户匹配
 DROP TABLE if EXISTS shujuzu.out_inv_relation1;
 CREATE TEMPORARY TABLE   shujuzu.out_inv_relation1 as
 SELECT a.db
