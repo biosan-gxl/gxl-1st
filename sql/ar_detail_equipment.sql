@@ -183,7 +183,7 @@ FROM shujuzu.ar_detail_equipment2;
 SELECT sum(icamount)
 FROM shujuzu.ar_detail_equipment
 ;
-#删除软件服务费
+#删除非设备的和杭州贝生的
 DELETE
 FROM shujuzu.ar_detail_equipment
 WHERE equipment = '否' or cohr = '杭州贝生'
