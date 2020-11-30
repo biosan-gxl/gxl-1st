@@ -6,7 +6,12 @@ SELECT sales_dept
        ,case when ddate >= '2020-11-01' and ddate <= '2020-11-08' then '1102-08'				
              when ddate >= '2020-11-09' and ddate <= '2020-11-15' then '1109-15'				
              when ddate >= '2020-11-16' and ddate <= '2020-11-22' then '1116-22'				
-             when ddate >= '2020-11-23' and ddate <= '2020-11-29' then '1123-29'				
+             when ddate >= '2020-11-23' and ddate <= '2020-11-29' then '1123-29'
+						 when ddate >= '2020-11-30' and ddate <= '2020-12-30' then '1123-30'
+						 when ddate >= '2020-12-01' and ddate <= '2020-12-07' then '1201-07'
+						 when ddate >= '2020-12-08' and ddate <= '2020-12-14' then '1208-14'
+						 when ddate >= '2020-12-15' and ddate <= '2020-12-21' then '1215-21'
+						 when ddate >= '2020-12-22' and ddate <= '2020-12-28' then '1222-28'
              else null 				
              end as ddate1				
        ,finnal_ccusname				
