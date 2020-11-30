@@ -446,7 +446,7 @@ begin
 			,year_
 			,i as month_
 			,sum(inum_person_songyang) as inum_person_songyang
-		from new425_02_delivery 
+		from shujuzu.new425_02_delivery 
 		where month_ <= i
 		group by city_get,city_give,item_code,year_;
 	set i=i+1;
@@ -468,7 +468,7 @@ select
 	,year_
 	,month_
 	,inum_person_all
-from new425_02_delivery 
+from shujuzu.new425_02_delivery 
 group by city_get,item_code,year_,month_;
 
 -- 3.5 处理YTD数据
@@ -498,7 +498,7 @@ begin
 			,year_
 			,i as month_
 			,sum(inum_person_all) as inum_person_all
-		from new425_03_delivery_tem01 
+		from shujuzu.new425_03_delivery_tem01 
 		where month_ <= i
 		group by city_get,item_code,year_;
 	set i=i+1;
@@ -524,8 +524,8 @@ select concat(a.city_get,a.item_code,a.year_,a.month_) as concatid
 	,a.month_
 	,a.inum_person_songyang
 	,b.inum_person_all
-from new425_03_delivery_tem00 as a 
-left join new425_03_delivery_tem02 as b 
+from shujuzu.new425_03_delivery_tem00 as a 
+left join shujuzu.new425_03_delivery_tem02 as b 
 on a.concatid = b.concatid;
 -- select * from shujuzu.new425_03_delivery_ytd;
 	
