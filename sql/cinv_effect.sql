@@ -186,7 +186,7 @@ GROUP BY ccusname,ddate,equiepment_name;
 DROP TABLE if EXISTS shujuzu.sales_cost_pre0;
 CREATE TEMPORARY TABLE  shujuzu.sales_cost_pre0 as 
 SELECT 
-			sales_region_new
+			if(cohr = '杭州贝生','杭州贝生',sales_region_new) as sales_region_new1
 			,ccusname
 			,cbustype
 			,cinvcode
@@ -198,7 +198,7 @@ SELECT
 			,sum(iquantity_adjust) as iquantity_adjust
 FROM report.fin_11_sales_cost_base a
 WHERE year(ddate) > 2017
-GROUP BY ccusname,cinvcode,cinvname,year(ddate),month(ddate);
+GROUP BY sales_region_new1,ccusname,cinvcode,cinvname,year(ddate),month(ddate);
 
 /*复核SELECT sum(isum)
 FROM shujuzu.sales_cost_pre4;
@@ -210,7 +210,7 @@ WHERE year(ddate)>2017*/
 DROP TABLE if EXISTS shujuzu.sales_cost_pre1;
 CREATE TEMPORARY TABLE  shujuzu.sales_cost_pre1 as
 SELECT 
-			a.sales_region_new
+			a.sales_region_new1
 			,a.ccusname
 			,a.cbustype
 			,a.cinvcode
@@ -232,7 +232,7 @@ ON a.cinvcode = b.bi_cinvcode;
 DROP TABLE if EXISTS shujuzu.sales_cost_pre2;
 CREATE TEMPORARY TABLE  shujuzu.sales_cost_pre2 as
 SELECT 
-    if(a.sales_region_new is null,'请核查',sales_region_new) as sales_region_new
+    if(a.sales_region_new1 is null,'请核查',sales_region_new1) as sales_region_new1
     ,if(a.ccusname is null,'请核查',a.ccusname) as ccusname  
     ,a.cbustype
     ,a.cinvcode
@@ -262,7 +262,7 @@ ON a.cinvcode = b.cinvcode_child;
 DROP TABLE if EXISTS shujuzu.sales_cost_pre3;
 CREATE TEMPORARY TABLE  shujuzu.sales_cost_pre3 as
 SELECT 
-     a.sales_region_new
+     a.sales_region_new1
      ,a.ccusname
      ,a.cbustype
      ,if(left(relation_cx,2)='qt',relation_cx,a.cinvcode) as cinvcode
@@ -280,7 +280,7 @@ FROM shujuzu.sales_cost_pre2 a;
 #得到包含所有产品的表，产品根据需要进行了分类
 DROP TABLE if EXISTS shujuzu.sales_cost_pre4;
 CREATE TEMPORARY TABLE  shujuzu.sales_cost_pre4 as
-SELECT a.sales_region_new
+SELECT a.sales_region_new1
       ,a.ccusname
       ,a.cbustype
       ,a.cinvcode
@@ -300,7 +300,7 @@ GROUP BY ccusname,cinvcode,year(ddate),month(ddate);
 DROP TABLE if EXISTS shujuzu.sales_cost_pre5;
 CREATE TEMPORARY TABLE  shujuzu.sales_cost_pre5 as
 SELECT 
-     a.sales_region_new
+     a.sales_region_new1
      ,a.ccusname
      ,a.cbustype
      ,a.cinvcode
@@ -324,7 +324,7 @@ CREATE INDEX index_sales_cost_pre5_ddate ON shujuzu.sales_cost_pre5(ddate);
 DROP TABLE if EXISTS shujuzu.sales_cost_pre60;
 CREATE TEMPORARY TABLE  shujuzu.sales_cost_pre60 as
 SELECT 
-     a.sales_region_new
+     a.sales_region_new1
      ,a.ccusname
      ,a.cbustype
      ,a.cinvcode
@@ -390,7 +390,7 @@ DROP TABLE if EXISTS shujuzu.sales_cost_pre61;
 CREATE TEMPORARY TABLE  shujuzu.sales_cost_pre61 as
 SELECT a.*,b.ddate
 FROM 
-			(SELECT DISTINCT a.sales_region_new
+			(SELECT DISTINCT a.sales_region_new1
 			,a.ccusname
 			,a.cbustype
 			,a.cinvcode
@@ -409,7 +409,7 @@ CREATE INDEX index_sales_cost_pre61_ddate ON shujuzu.sales_cost_pre61(ddate);
 DROP TABLE if EXISTS shujuzu.sales_cost_pre6;
 CREATE TEMPORARY TABLE  shujuzu.sales_cost_pre6 as
 SELECT 
-     b.sales_region_new
+     b.sales_region_new1
      ,b.ccusname
      ,b.cbustype
      ,b.cinvcode
@@ -429,7 +429,7 @@ ON a.ccusname = b.ccusname  and a.cinvcode = b.cinvcode and a.ddate = b.ddate;
 #得各月累计的主试剂成本
 DROP TABLE if EXISTS shujuzu.sales_cost_pre7;
 CREATE TEMPORARY TABLE  shujuzu.sales_cost_pre7 as
-SELECT a.sales_region_new
+SELECT a.sales_region_new1
       ,a.ccusname
       ,a.cbustype
       ,a.cinvcode
@@ -477,7 +477,7 @@ CREATE index index_sales_cost_main_cinvname_main ON shujuzu.sales_cost_main(cinv
 DROP TABLE if EXISTS shujuzu.sales_cost_child1;
 CREATE TEMPORARY TABLE  shujuzu.sales_cost_child1 as
 SELECT 
-     a.sales_region_new
+     a.sales_region_new1
      ,a.ccusname
      ,a.cbustype
      ,a.cinvcode
@@ -507,7 +507,7 @@ CREATE INDEX index_sales_cost_child1_ddate ON shujuzu.sales_cost_child1(ddate);
 DROP TABLE if EXISTS shujuzu.sales_cost_child10;
 CREATE TEMPORARY TABLE  shujuzu.sales_cost_child10 as
 SELECT
-     a.sales_region_new
+     a.sales_region_new1
      ,a.ccusname
      ,a.cbustype
      ,a.cinvcode
@@ -539,7 +539,7 @@ WHERE b.cinvcode_child is not null;
 DROP TABLE if EXISTS shujuzu.sales_cost_child2;
 CREATE TEMPORARY TABLE  shujuzu.sales_cost_child2 as
 SELECT 
-     a.sales_region_new
+     a.sales_region_new1
      ,a.ccusname
      ,a.cbustype
      ,a.cinvcode
@@ -564,7 +564,7 @@ CREATE INDEX index_sales_cost_child2_ddate ON shujuzu.sales_cost_child2(ddate);
 DROP TABLE if EXISTS shujuzu.sales_cost_child3;
 CREATE TEMPORARY TABLE  shujuzu.sales_cost_child3 as
 SELECT 
-     a.sales_region_new
+     a.sales_region_new1
      ,a.ccusname
      ,a.cbustype
      ,a.cinvcode
@@ -604,7 +604,7 @@ CREATE INDEX index_sales_cost_child4_ddate ON shujuzu.sales_cost_child4(ddate);
 DROP TABLE if EXISTS shujuzu.sales_cost_child5;
 CREATE TEMPORARY TABLE  shujuzu.sales_cost_child5 as
 SELECT 
-      a.sales_region_new
+      a.sales_region_new1
       ,a.ccusname
       ,a.cbustype
       ,a.cinvcode
@@ -628,7 +628,7 @@ ON a.ccusname = b.ccusname  and a.cinvcode = b.cinvcode and a.ddate = b.ddate;
 DROP TABLE if EXISTS shujuzu.sales_cost_child_ttl0;
 CREATE TEMPORARY TABLE  shujuzu.sales_cost_child_ttl0 as
 SELECT 
-     a.sales_region_new
+     a.sales_region_new1
      ,a.ccusname
      ,a.cbustype
      ,a.cinvcode
@@ -644,7 +644,7 @@ FROM shujuzu.sales_cost_child10 a
 WHERE fenlei = '辅助'
 UNION
 SELECT 
-      a.sales_region_new
+      a.sales_region_new1
       ,a.ccusname
       ,a.cbustype
       ,a.cinvcode
@@ -663,7 +663,7 @@ WHERE add_cost_main_ttl>0; #过滤掉因主试剂成本为0而不能分摊的数
 DROP TABLE if EXISTS shujuzu.sales_cost_child_ttl;
 CREATE TEMPORARY TABLE  shujuzu.sales_cost_child_ttl as
 SELECT 
-      a.sales_region_new
+      a.sales_region_new1
       ,a.ccusname
       ,a.cinvname_main
       ,ddate
@@ -681,7 +681,7 @@ CREATE INDEX index_sales_cost_child_ttl_ddate ON shujuzu.sales_cost_child_ttl(dd
 DROP TABLE if EXISTS shujuzu.cinv_effect01;
 CREATE TEMPORARY TABLE  shujuzu.cinv_effect01 as
 SELECT 
-      a.sales_region_new
+      a.sales_region_new1
       ,a.ccusname
       ,a.cbustype
       ,a.cinvcode
@@ -708,7 +708,7 @@ CREATE INDEX index_cinv_effect01_ddate ON shujuzu.cinv_effect01(ddate);
 DROP TABLE if EXISTS shujuzu.cinv_effect02;
 CREATE TEMPORARY TABLE  shujuzu.cinv_effect02 as
 SELECT 
-      a.sales_region_new
+      a.sales_region_new1
       ,a.ccusname
       ,a.cbustype
       ,a.cinvcode
@@ -749,7 +749,7 @@ CREATE INDEX index_eq_depreciation_relation_cx_ddate ON shujuzu.eq_depreciation_
 DROP TABLE if EXISTS shujuzu.cinv_effect03;
 CREATE TEMPORARY TABLE  shujuzu.cinv_effect03 as
 SELECT 
-     a.sales_region_new
+     a.sales_region_new1
      ,a.ccusname
      ,a.cbustype
      ,a.cinvcode
@@ -785,7 +785,7 @@ SELECT ccusname,cinvname_main,COUNT(DISTINCT cinvcode) as num_main FROM shujuzu.
 DROP TABLE if EXISTS shujuzu.cinv_effect031;
 CREATE TEMPORARY TABLE  shujuzu.cinv_effect031 as
 SELECT 
-     a.sales_region_new
+     a.sales_region_new1
      ,a.ccusname
      ,a.cbustype
      ,a.cinvcode
@@ -812,7 +812,7 @@ ON a.ccusname = b.ccusname and a.cinvname_main = b.cinvname_main ;
 #有的客户设备有折旧，但是没有主试剂的成本收入等信息
 DROP TABLE if EXISTS shujuzu.eq_depreciation1;
 CREATE TEMPORARY TABLE  shujuzu.eq_depreciation1 as
-SELECT c.sales_region_new,a.*
+SELECT c.sales_region_new as sales_region_new1,a.*
 FROM shujuzu.eq_depreciation_relation_cx a
 LEFT JOIN 
          (SELECT DISTINCT ccusname,cinvname_main
@@ -826,7 +826,7 @@ WHERE b.ccusname is null and b.cinvname_main is null and a.amount_depre is not n
 DROP TABLE if EXISTS shujuzu.main_eqipment;
 CREATE TEMPORARY TABLE  shujuzu.main_eqipment as
 SELECT 
-     a.sales_region_new
+     a.sales_region_new1
      ,a.ccusname
      ,a.cinvcode
      ,a.cinvname
@@ -843,7 +843,7 @@ GROUP BY ccusname,ddate,cinvcode;
 
 DROP TABLE if EXISTS shujuzu.cinv_effect04;
 CREATE TEMPORARY TABLE  shujuzu.cinv_effect04 as
-SELECT a.sales_region_new
+SELECT a.sales_region_new1
        ,a.ccusname
        ,a.cbustype
        ,a.cinvcode
@@ -871,7 +871,7 @@ FROM shujuzu.cinv_effect031 a;
 
 DROP TABLE if EXISTS shujuzu.cinv_effect05;
 CREATE TEMPORARY TABLE  shujuzu.cinv_effect05 as
-SELECT a.sales_region_new
+SELECT a.sales_region_new1
       ,a.ccusname
       ,a.cbustype
       ,a.cinvcode
@@ -892,7 +892,7 @@ SELECT a.sales_region_new
       ,num_main
 FROM shujuzu.cinv_effect04 a
 UNION
-SELECT a.sales_region_new
+SELECT a.sales_region_new1
       ,a.ccusname
       ,a.cbustype
       ,a.cinvcode
@@ -914,7 +914,7 @@ SELECT a.sales_region_new
 FROM shujuzu.sales_cost_pre5 a
 WHERE left(cinvcode,2) = 'qt'
 UNION
-SELECT a.sales_region_new
+SELECT a.sales_region_new1
       ,a.ccusname
       ,a.cbustype
       ,'qt其他' as cinvcode
@@ -936,7 +936,7 @@ SELECT a.sales_region_new
 FROM shujuzu.sales_cost_child10 a
 WHERE fenlei = '其他'
 UNION
-SELECT  a.sales_region_new
+SELECT  a.sales_region_new1
       ,a.ccusname
       ,a.cbustype
       ,'qt其他' as cinvcode
@@ -959,7 +959,7 @@ FROM shujuzu.sales_cost_child5 a
 WHERE add_cost_main_ttl is null OR  add_cost_main_ttl <= 0
 GROUP BY ccusname,cinvcode,ddate #有重复的，分组是为了避免重复
 UNION
-SELECT a.sales_region_new
+SELECT a.sales_region_new1
       ,a.ccusname
       ,a.cbustype
       ,a.cinvcode
@@ -982,7 +982,7 @@ FROM shujuzu.sales_cost_pre2 a
 WHERE relation_cx = '主设备'
 UNION 
 #加上有的设备有折旧但是没有主试剂成本收入的情况
-SELECT sales_region_new
+SELECT sales_region_new1
      ,a.ccusname
      ,''
      ,''
@@ -1005,7 +1005,7 @@ FROM shujuzu.eq_depreciation1 a;
 
 DROP TABLE if EXISTS shujuzu.cinv_effect06;
 CREATE TEMPORARY TABLE  shujuzu.cinv_effect06 as
-SELECT  a.sales_region_new
+SELECT  a.sales_region_new1
       ,a.ccusname
       ,a.cbustype
       ,a.cinvcode
@@ -1050,7 +1050,7 @@ SET cinvname_main = 'Nextseq 550AR' WHERE ccusname = '湖南省妇幼保健院' 
 #保险 #edw.x_insure_cover已经将华大的保险成本弄成0了，因此可以直接将对应的主设备写成安诺优达的设备，对结果不影响
 DROP TABLE if EXISTS shujuzu.cinv_effect_insure;
 CREATE TEMPORARY TABLE  shujuzu.cinv_effect_insure as
-SELECT b.sales_region_new,ccusname,ddate,cinvname_main,sum(insure_cost) as insure_cost
+SELECT b.sales_region_new as sales_region_new1,ccusname,ddate,cinvname_main,sum(insure_cost) as insure_cost
 FROM 
     (SELECT bi_cusname as ccusname,DATE_FORMAT(ddate,'%Y-%m-01') as ddate,
 		        case when item_name = 'NIPT' then 'qt其他LDT'
@@ -1092,7 +1092,7 @@ CREATE INDEX index_cinv_effect07_ddate ON shujuzu.cinv_effect07(ddate);
 
 DROP TABLE if EXISTS shujuzu.cinv_effect08;
 CREATE TEMPORARY TABLE  shujuzu.cinv_effect08 as
-SELECT  a.sales_region_new
+SELECT  a.sales_region_new1
        ,a.ccusname
        ,a.cbustype
        ,a.cinvcode
@@ -1119,7 +1119,7 @@ ON a.ccusname = b.ccusname and a.ddate = b.ddate and a.cinvname_main = b.cinvnam
 
 DROP TABLE if EXISTS shujuzu.cinv_effect;
 CREATE  TABLE  shujuzu.cinv_effect as
-SELECT a.sales_region_new
+SELECT a.sales_region_new1
        ,a.ccusname
        ,a.cbustype
        ,a.cinvcode
@@ -1139,7 +1139,7 @@ SELECT a.sales_region_new
        ,a.add_cost #按客户产品分的主试剂累计成本
        ,a.add_cost_main1
 FROM(
-      SELECT  a.sales_region_new
+      SELECT  a.sales_region_new1
              ,a.ccusname
              ,a.cbustype
              ,a.cinvcode
@@ -1160,7 +1160,7 @@ FROM(
              ,a.add_cost_main1 #按客户对应主设备分的主试剂累计成本
       FROM shujuzu.cinv_effect08 a
       UNION
-      SELECT sales_region_new
+      SELECT sales_region_new1
              ,ccusname
              ,'LDT'
              ,cinvname_main
