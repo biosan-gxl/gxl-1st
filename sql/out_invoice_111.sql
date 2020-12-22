@@ -222,7 +222,7 @@ SELECT a.subsidiary
        ,a.idlsid
 	   ,a.inum_unit_person
 			 ,if(a.subsidiary='杭州贝生','杭州贝生',c.sales_region_new) as sales_region_new
-FROM shujuzu.sales_devdis_relation_pre0 a
+FROM shujuzu.sales_devdis_relation_pre1 a
 LEFT JOIN (SELECT * FROM edw.dic_customer  GROUP BY ccusname) b
 ON a.cdefine10  = b.ccusname
 LEFT JOIN edw.map_customer c
