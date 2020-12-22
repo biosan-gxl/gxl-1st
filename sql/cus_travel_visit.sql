@@ -107,7 +107,7 @@ left join shujuzu.crmbf_mid2 b
 on a.bi_cusname=b.bi_cusname and a.name=b.name and a.y_mon=b.y_mon
 left join shujuzu.crmbf_mid3 c
 on a.bi_cusname=c.bi_cusname and a.name=c.name and a.y_mon=c.y_mon
-left join edw.ehr_employee d
+left join pdm.ehr_employee d
 on a.name=d.name;
 
 create index index_crmbf_mid5_bi_cusname on shujuzu.crmbf_mid5(bi_cusname);
@@ -282,4 +282,7 @@ UPDATE shujuzu.cust_travel_visit set second_dept='销售中心' WHERE second_dep
 UPDATE shujuzu.cust_travel_visit set second_dept='市场中心' WHERE second_dept='市场部';
 UPDATE test.cust_travel_visit set second_dept='技术保障中心' WHERE second_dept='技术保障中心（原）';
 
+
+#因架构调整，临床学术的二级部门变成了浙江博圣生物股份，对统计销售中心的拜访次数有影响
+update test.cust_travel_visit set second_dept='销售中心' where position_name like '临床学术%';
 
