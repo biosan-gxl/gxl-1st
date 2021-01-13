@@ -1,5 +1,5 @@
 drop table if EXISTS shujuzu.budget_2021_temp01;
-create table  shujuzu.budget_2021_temp01 as 
+create TEMPORARY table  shujuzu.budget_2021_temp01 as 
 SELECT  sales_dept
      ,a.sales_region_new
      ,a.ccusname
@@ -21,7 +21,7 @@ on a.cinvcode = b.bi_cinvcode
 ;
 
 drop table if EXISTS shujuzu.budget_2021_temp02;
-create table  shujuzu.budget_2021_temp02 as
+create TEMPORARY table  shujuzu.budget_2021_temp02 as
 select sales_dept
       ,a.sales_region_new
       ,a.ccusname
@@ -32,12 +32,12 @@ select sales_dept
       ,sum(isum) as isum
 			,sum(inum_person) as inum_person
 from shujuzu.budget_2021_temp01 a
-group by sales_dept,sales_region_new,ccusname,beizhu_item
+group by sales_dept,sales_region_new,ccusname,beizhu_item 
 ;
 
 -- 2020年收入
 drop table if EXISTS shujuzu.budget_2021_temp03;
-create table  shujuzu.budget_2021_temp03 as
+create TEMPORARY table  shujuzu.budget_2021_temp03 as
 select 
       if(cohr='杭州贝生','杭州贝生',c.sales_dept) as sales_dept
       ,if(cohr='杭州贝生','杭州贝生',c.sales_region_new) as sales_region_new
@@ -59,7 +59,7 @@ where ddate >= '2020-01-01' and ddate <= '2020-12-31'
 ;
 
 drop table if EXISTS shujuzu.budget_2021_temp04;
-create table  shujuzu.budget_2021_temp04 as
+create TEMPORARY table  shujuzu.budget_2021_temp04 as
 select sales_dept
       ,sales_region_new
       ,a.ccusname
@@ -71,7 +71,7 @@ group by sales_dept,sales_region_new,ccusname,beizhu_item
 ;
 
 drop table if EXISTS shujuzu.budget_2021_temp05;
-create table  shujuzu.budget_2021_temp05 as
+create TEMPORARY table  shujuzu.budget_2021_temp05 as
 select
      a.sales_dept
      ,a.sales_region_new
@@ -99,7 +99,7 @@ from shujuzu.budget_2021_temp04 a
 ;
 
 drop table if EXISTS shujuzu.budget_2021_temp06;
-create table  shujuzu.budget_2021_temp06 as
+create TEMPORARY table  shujuzu.budget_2021_temp06 as
 select
     a.sales_dept
     ,a.sales_region_new
@@ -117,7 +117,7 @@ group by sales_dept,sales_region_new,ccusname,beizhu_item
 ;
 
 drop table if EXISTS shujuzu.budget_2021_temp07;
-create table  shujuzu.budget_2021_temp07 as
+create TEMPORARY table  shujuzu.budget_2021_temp07 as
 select
     a.sales_dept
     ,a.sales_region_new
@@ -144,7 +144,7 @@ set  beizhu='' where isum=0 and inum_person=0 #计划数量和金额为0，则�
 ;
 
 drop table if EXISTS shujuzu.budget_2021_temp08;
-create table  shujuzu.budget_2021_temp08 as
+create TEMPORARY table  shujuzu.budget_2021_temp08 as
 select
     a.sales_dept
     ,a.sales_region_new
@@ -156,7 +156,7 @@ group by sales_dept,sales_region_new,ccusname
 ;
 
 drop table if EXISTS shujuzu.budget_2021_newcus;
-create table  shujuzu.budget_2021_newcus as
+create  table  shujuzu.budget_2021_newcus as
 select
     a.sales_dept
     ,a.sales_region_new
