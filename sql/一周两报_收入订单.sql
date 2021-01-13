@@ -11,6 +11,7 @@ SELECT sales_dept
 						 when ddate >= '2020-12-08' and ddate <= '2020-12-14' then '1208-14'
 						 when ddate >= '2020-12-15' and ddate <= '2020-12-21' then '1215-21'
 						 when ddate >= '2020-12-22' and ddate <= '2020-12-28' then '1222-28'
+						 when ddate >= '2020-12-29' and ddate <= '2020-12-31' then '1229-31'
              else null 				
              end as ddate1				
        ,finnal_ccusname				
