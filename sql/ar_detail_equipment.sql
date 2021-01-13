@@ -4,7 +4,7 @@ DROP TABLE if EXISTS shujuzu.ar_detail_equipment0 ;
 CREATE TEMPORARY TABLE shujuzu.ar_detail_equipment0 as 
 SELECT ccovouchid
 FROM pdm.ar_detail
-WHERE date_ap >= '2020-01-01' and date_ap <= '2020-09-30' AND (ar_class ='设备' or cinvcode = 'QT00005' or cinvcode = 'QT01010')
+WHERE date_ap >= '2020-01-01' and date_ap <= '2020-12-31' AND (ar_class ='设备' or cinvcode = 'QT00005' or cinvcode = 'QT01010')
 GROUP BY ccovouchid
 Having SUM(icamount)>0
 ;
@@ -47,7 +47,7 @@ SELECT
 FROM pdm.ar_detail a
 RIGHT JOIN shujuzu.ar_detail_equipment0 b
 ON a.ccovouchid = b.ccovouchid
-WHERE a.ar_ap = 'ap' AND (ar_class ='设备' or cinvcode = 'QT00005' or cinvcode = 'QT01010') and a.date_ap >= '2020-01-01' and a.date_ap <= '2020-09-30'
+WHERE a.ar_ap = 'ap' AND (ar_class ='设备' or cinvcode = 'QT00005' or cinvcode = 'QT01010') and a.date_ap >= '2020-01-01' and a.date_ap <= '2020-12-31'
 ;
 
 
