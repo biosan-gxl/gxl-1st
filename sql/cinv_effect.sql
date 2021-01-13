@@ -1206,11 +1206,17 @@ SELECT sum(equipment_depretion)
 FROM shujuzu.cinv_effect06;
 
 SELECT sum(amount_depre)
-FROM eq_depreciation_relation;
+FROM shujuzu.eq_depreciation_relation;
 
-
-
-
+update shujuzu.cinv_effect set cinvname_main = item_name where cinvname_main ='';
+update shujuzu.cinv_effect set cinvname_main = '核型' where  item_name='KM1' or item_name='KM2' ;
+update shujuzu.cinv_effect set cinvname_main = cinvname where item_name = '二代测序仪';
+update shujuzu.cinv_effect set cinvcode= 'YQ01011' ,cinvname = 'Nextseq 550AR'  ,cinvname_main = 'Nextseq 550AR' where   cinvname_main = '二代测序仪' and ccusname = '安徽兰迪医学实验室有限公司';
+update shujuzu.cinv_effect set cinvname_main = 'ACQUITY  I-X' where item_name ='串联质谱仪';
+update shujuzu.cinv_effect set cinvname_main = '芯片设备' where item_name ='CMA设备';
+update shujuzu.cinv_effect set cinvname_main = '毛细管电泳仪' where item_name ='产筛毛细管电泳仪';
+update shujuzu.cinv_effect set cinvname_main = 'luminex 200' where item_name ='BoBs设备';
+update shujuzu.cinv_effect set cinvname_main = '核型' where item_name ='GSL-120';
 
 
 
