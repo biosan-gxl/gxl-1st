@@ -5,17 +5,15 @@ SELECT a.*
 			,month(ddate) as month_
 			,QUARTER(ddate) as quarter
 			,b.cinv_key_2020
-			,if(a.item_code <> 'CQ0706',b.cinv_key_2020,'CNV_seq') as main_item
+			,if(a.item_code = 'CQ0706','CNV_seq',b.cinv_key_2020) as main_item
 			,b.equipment
 			,b.screen_class
 			,b.level_three as item_name
-FROM 
-		(SELECT *
-		FROM report.bonus_base_person
-		WHERE (ddate >='2019-07-01' and ddate <= '2019-9-30') or (ddate >='2020-07-01' and ddate <= '2020-9-30'))a
+FROM report.bonus_base_person a		
 LEFT JOIN edw.map_inventory b
 ON a.cinvcode = b.bi_cinvcode
-WHERE b.cinv_key_2020 REGEXP '甄元LDT|杰毅麦特NIPT|服务_软件|东方海洋VD' or (a.item_code = 'CQ0706' and b.cinv_key_2020 is not null) ;
+WHERE (b.cinv_key_2020 REGEXP '甄元LDT|杰毅麦特NIPT|服务_软件|东方海洋VD' or a.item_code = 'CQ0706')
+and ddate >='2020-07-01' and ddate <= '2020-12-31';
 
 DROP table if EXISTS main_item01;
 CREATE TEMPORARY TABLE main_item01 as 
@@ -32,14 +30,14 @@ SELECT a.year_
 			,a.equipment
 			,sum(a.isum) as isum
 			,sum(a.isum_budget) as isum_budget 
-			,'q3' as quarter
+			,quarter
 			,main_item
 FROM main_item1 a
-WHERE quarter = 3 and sales_dept = '销售一部' or sales_dept = '销售二部'
+WHERE  sales_dept = '销售一部' or sales_dept = '销售二部'
 GROUP BY year_,month_,sales_dept,sales_region_new,areadirector,cverifier,cinv_key_2020,screen_class,main_item;
 
 drop table if exists shujuzu.bonus_base_ehr;
-CREATE TEMPORARY TABLE if not exists shujuzu.bonus_base_ehr
+CREATE  TABLE if not exists shujuzu.bonus_base_ehr
 select 
 	   name 
     ,employeestatus
@@ -52,8 +50,8 @@ from pdm.ehr_employee
 where employeestatus = '离职' and year(lastworkdate) = 2020; 
 alter table report.bonus_base_ehr add index (name);
 
-DROP table if EXISTS main_item2;
-CREATE  TABLE main_item2 as 
+DROP table if EXISTS main_item;
+CREATE  TABLE main_item as 
 SELECT  a.year_
 				,a.month_
 				,a.sales_dept
@@ -121,16 +119,24 @@ on a.cverifier = c.name ;
 -- where (TransitionType_cver = '主动离职' or TransitionType_cver is null )  and lastworkdate_cver is not null 
 -- and month_cver > 9 and month_cver <= 12 and month_ >9;
 
-SELECT sum(isum)
-FROM 
-		 report.bonus_base_person a		
-LEFT JOIN edw.map_inventory b
-ON a.cinvcode = b.bi_cinvcode
-WHERE (b.cinv_key_2020 REGEXP '甄元LDT|杰毅麦特NIPT|服务_软件|东方海洋VD' or (a.item_code = 'CQ0706' and b.cinv_key_2020 is not null)) and ddate >='2020-07-01' and ddate <= '2020-9-30'  and (sales_dept = '销售一部' or sales_dept = '销售二部') or (a.item_code = 'CQ0706' and b.cinv_key_2020 is not null) ;
 
 SELECT sum(isum)
 FROM main_item1
-WHERE (sales_dept = '销售一部' or sales_dept = '销售二部') and screen_class='诊断';
+where sales_dept = '销售一部' or sales_dept = '销售二部';
+
 SELECT sum(isum)
-FROM main_item
-WHERE  screen_class='诊断'
+FROM main_item01;
+
+SELECT sum(isum)
+FROM main_item;
+
+-- 计算CMA超额单项奖
+
+DROP table if EXISTS year_CMA;
+CREATE  TABLE year_CMA as 
+SELECT a.*
+			,year(ddate) as year_
+			,month(ddate) as month_
+FROM report.bonus_base_person a		
+WHERE  a.item_code = 'CQ0704' and ddate >='2020-01-01' and ddate <= '2020-12-31';
+

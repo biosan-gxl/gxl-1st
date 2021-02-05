@@ -1,18 +1,13 @@
 #志坚总需要统计的连续几年的收入出库装机数据，目前全部为临时表，需要的时候手动修改下
+select distinct if_xs
+from pdm.invoice_order
 
-DROP TABLE if EXISTS shujuzu.sales_section1;			
-CREATE TEMPORARY TABLE shujuzu.sales_section1 as 			
+DROP TABLE if EXISTS shujuzu.sales_section0;			
+CREATE TEMPORARY TABLE shujuzu.sales_section0 as 			
 SELECT 			
-     case when cohr='杭州贝生' and sales_region_new='西南区' then '西南区'	
-	        when cohr='杭州贝生' and sales_region_new='西北区' then '西北区'
-					when cohr='杭州贝生' and sales_region_new='东北区' then '东北区'
-					when cohr='杭州贝生'  then '代理商运营'
-          when sales_region_new is null then '其他'			
-     		  else sales_region_new 
-					end as sales_region_new1	
-     ,if(cohr='杭州贝生' ,'杭州贝生',sales_dept) as sales_dept			
-     ,ccusname			
-     ,finnal_ccusname			
+     cohr	
+      ,finnal_ccuscode
+      ,finnal_ccusname			
      ,cbustype			
      ,cinvcode			
      ,cinvname			
@@ -22,9 +17,63 @@ SELECT
      ,sum(iquantity) as iquantity			
      ,sum(isum) as isum			
 FROM pdm.invoice_order			
-WHERE ddate >= '2018-01-01' and ddate <= '2020-12-31' and sales_dept <> '供应链中心' and sales_dept <> 'BD部'	and item_code <> 'JK0101'		
-GROUP BY sales_dept,sales_region_new1,ccusname,finnal_ccusname,cinvcode,year_;			
-			
+WHERE ddate >= '2018-01-01' and ddate <= '2020-12-31' 	and item_code <> 'JK0101'		and if_xs is null
+GROUP BY cohr,finnal_ccuscode,cinvcode,year_;			
+
+
+
+DROP TABLE if EXISTS shujuzu.sales_section1;			
+CREATE TEMPORARY TABLE shujuzu.sales_section1 as 			
+SELECT 			
+     case when cohr='杭州贝生' and b.sales_region_new='西南区' then '西南区'	
+	        when cohr='杭州贝生' and b.sales_region_new='西北区' then '西北区'
+					when cohr='杭州贝生' and b.sales_region_new='东北区' then '东北区'
+					when cohr='杭州贝生'  then '代理商运营'
+          when b.sales_region_new is null then '其他'			
+     		  else b.sales_region_new 
+					end as sales_region_new1	
+     ,case when cohr='杭州贝生' then '杭州贝生'
+		       else b.sales_dept end as sales_dept1			
+     ,a.finnal_ccusname			
+     ,cbustype			
+     ,cinvcode			
+     ,cinvname			
+     ,DATE_FORMAT(ddate,'%Y-%m-01') as ddate			
+     ,item_name			
+     ,year(ddate) as year_
+     ,sum(iquantity) as iquantity			
+     ,sum(isum) as isum			
+FROM shujuzu.sales_section0	a
+left join edw.map_customer b
+on a.finnal_ccuscode = b.bi_cuscode
+GROUP BY sales_dept1,sales_region_new1,finnal_ccusname,cinvcode,year_;	
+
+
+-- DROP TABLE if EXISTS shujuzu.sales_section1;			
+-- CREATE  TABLE shujuzu.sales_section1 as 			
+-- SELECT 			
+--      case when cohr='杭州贝生' and b.sales_region_new='西南区' then '西南区'	
+-- 	        when cohr='杭州贝生' and b.sales_region_new='西北区' then '西北区'
+-- 					when cohr='杭州贝生' and b.sales_region_new='东北区' then '东北区'
+-- 					when cohr='杭州贝生'  then '代理商运营'
+--           when b.sales_region_new is null then '其他'			
+--      		  else b.sales_region_new 
+-- 					end as sales_region_new1	
+--      ,case when cohr='杭州贝生' then '杭州贝生'
+-- 		       else b.sales_dept end as sales_dept
+-- 			,cohr		 
+--      ,a.finnal_ccusname			
+--      ,cbustype			
+--      ,cinvcode			
+--      ,cinvname			
+--      ,DATE_FORMAT(ddate,'%Y-%m-01') as ddate			
+--      ,item_name			
+--      ,year(ddate) as year_
+--      ,iquantity	
+--      ,isum		
+-- FROM shujuzu.sales_section0	a
+-- left join edw.map_customer b
+-- on a.finnal_ccuscode = b.bi_cuscode
 -- DROP TABLE if EXISTS shujuzu.sales_section2;			
 -- CREATE TEMPORARY TABLE shujuzu.sales_section2 as			
 -- SELECT 
@@ -65,9 +114,8 @@ WHERE ddate >='2016-10-01' and ddate <='2017-09-30'*/
 			
 DROP TABLE if EXISTS shujuzu.invoice_18_20_20210114;			
 CREATE  TABLE shujuzu.invoice_18_20_20210114 as 			
-SELECT sales_dept			
-       ,sales_region_new1			
-       ,ccusname			
+SELECT sales_dept1 as sales_dept			
+       ,sales_region_new1				
        ,finnal_ccusname			
        ,cinvcode			
        ,cinvname			
@@ -95,6 +143,7 @@ SELECT sales_dept
    			when item_name = '串联试剂' then '串联'
    			when item_name='CMA' and  b.business_class='产品类' then 'CMA自建'
    			when item_name='CMA' and  b.business_class='LDT' then 'CMA外送'
+				when item_name='维生素D' then 'VD'
    			when b.cinv_key_2020 = '服务_软件' then '软件'
    			when b.business_class='LDT' then '其他LDT'
    			end as classify

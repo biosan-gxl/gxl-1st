@@ -15,15 +15,11 @@ SELECT
      ,cinvname			
      ,DATE_FORMAT(ddate,'%Y-%m-01') as ddate			
      ,citemname as item_name			
-     ,case when ddate >= '2016-10-01' and  ddate <= '2017-09-30' then '1610-1709'			
-     		  when ddate >= '2017-10-01' and  ddate <= '2018-09-30' then '1710-1809'	
-     			when ddate >= '2018-10-01' and  ddate <= '2019-09-30' then '1810-1909'
-     			when ddate >= '2019-10-01' and  ddate <= '2020-09-30' then '1910-2009' 
-					end as date_section
+     ,year(ddate) as date_section
      ,sum(iquantity) as iquantity			
      ,sum(isum) as isum			
 FROM pdm.invoice_order			
-WHERE ddate >= '2016-10-01' and ddate <= '2020-09-30' and sales_dept <> '供应链中心' and sales_dept <> 'BD部'			
+WHERE ddate >= '2017-01-01' and ddate <= '2020-12-31' and sales_dept <> '供应链中心' and sales_dept <> 'BD部'			
 GROUP BY sales_region_new1,ccusname,finnal_ccusname,cinvcode,year(ddate),month(ddate);			
 			
 DROP TABLE if EXISTS shujuzu.sales_section2;			
@@ -65,7 +61,7 @@ WHERE ddate >='2016-10-01' and ddate <='2017-09-30'*/
 CREATE index index_sales_section1_cinvcode on shujuzu.sales_section2(cinvcode);			
 			
 DROP TABLE if EXISTS shujuzu.sales_section;			
-CREATE TEMPORARY TABLE shujuzu.sales_section as 			
+CREATE  TABLE shujuzu.sales_section as 			
 SELECT sales_dept			
        ,sales_region_new1			
        ,ccusname			
@@ -82,8 +78,9 @@ SELECT sales_dept
        ,iquantity*b.inum_unit_person as iquantity_person			
        ,iquantity			
        ,isum/1000 as isum			
-,case when item_name = 'NIPT' then 'NIPT'			
-			when item_name = 'NIPT-Plus' then 'NIPT-Plus'
+,case 		
+			when item_name regexp 'NIPT'  and b.cinvbrand REGEXP '甄元|杰毅麦特' then '杰毅NIPT(含plus)'
+			when item_name regexp 'NIPT' then '其他NIPT'
 			when item_name = 'Free hCGβ（早）' or  item_name = 'PAPP-A' then '早孕'
 			when item_name = 'AFP/Free hCGβ' or  item_name = 'UE3' then '中孕' 
 			when item_name = 'CNV-seq'  then 'CNV-seq' 
@@ -94,8 +91,14 @@ SELECT sales_dept
 			when item_name='CMA' and  b.business_class='产品类' then 'CMA自建'
 			when item_name='CMA' and  b.business_class='LDT' then 'CMA外送'
 			when b.cinv_key_2020 = '服务_软件' then '软件'
+			when b.equipment = '是' then '设备'
+			when item_name = '子痫前期预测' then '子痫(试剂+外送)'
+			when item_name = '耳聋基因'  and business_class = '产品类' then '耳聋试剂'
+			when item_name regexp '地贫' and business_class = '产品类' then '地贫试剂'
 			when b.business_class='LDT' then '其他LDT'
+			else '其他'
 			end as classify
+			,b.cinvbrand
 FROM shujuzu.sales_section2 a			
 LEFT JOIN edw.map_inventory b			
 ON a.cinvcode = b.bi_cinvcode;			
@@ -115,18 +118,14 @@ SELECT
      ,cinvcode			
      ,cinvname			
      ,citemname as item_name			
-     ,case when ddate >= '2016-10-01' and  ddate <= '2017-09-30' then '1610-1709'			
-     		  when ddate >= '2017-10-01' and  ddate <= '2018-09-30' then '1710-1809'	
-     			when ddate >= '2018-10-01' and  ddate <= '2019-09-30' then '1810-1909'
-     			when ddate >= '2019-10-01' and  ddate <= '2020-09-30' then '1910-2009' 
-					end as date_section
+     ,year(ddate) as date_section
      ,sum(inum_person) as iquantity_inum_person			
 FROM pdm.outdepot_order			
-WHERE ddate >= '2016-10-01' and ddate <= '2020-09-30' and sales_dept <> '供应链中心' and sales_dept <> 'BD部' 			
+WHERE ddate >= '2017-01-01' and ddate <= '2020-12-31' and sales_dept <> '供应链中心' and sales_dept <> 'BD部' 			
 GROUP BY sales_region_new1,ccusname,finnal_ccusname,cinvcode,date_section;			
 			
 DROP TABLE if EXISTS shujuzu.out_depot_section;			
-CREATE TEMPORARY TABLE shujuzu.out_depot_section as 			
+CREATE  TABLE shujuzu.out_depot_section as 			
 SELECT sales_dept			
       ,sales_region_new1			
       ,ccusname			
@@ -137,20 +136,28 @@ SELECT sales_dept
       ,cbustype			
       ,date_section			
       ,iquantity_inum_person			
-      ,case when item_name = 'NIPT' then 'NIPT'			
-			      when item_name = 'NIPT-Plus' then 'NIPT-Plus'
-			      when item_name = 'PAPP-A' then 'PAPP-A'
-			      when item_name = 'AFP/Free hCGβ' then 'AFP/Free hCGβ' 
-			      when item_name = 'CNV-seq'  then 'CNV-seq' 
-			      when item_name like '%全外%'  then 'WES'
-			      when item_name = 'GCMS' or  item_name = '遗传代谢病panel' then 'IEM'
-			      when item_name = 'TSH'  then 'TSH'
-			      when item_name = '串联试剂' then '串联'
-			      when item_name='CMA' and  cbustype='产品类' then 'CMA自建'
-			      when item_name='CMA' and  cbustype='LDT' then 'CMA外送'
-			      when cinvcode like 'YQ%' then item_name
-			      end as classify
-FROM shujuzu.out_depot_section1 ;			
+      ,case when item_name regexp 'NIPT'  and b.cinvbrand REGEXP '甄元|杰毅麦特' then '杰毅NIPT(含plus)'
+			when item_name regexp 'NIPT' then '其他NIPT'
+			when item_name = 'PAPP-A' then 'PAPP-A'
+			when item_name = 'AFP/Free hCGβ'  then 'AFP/Free hCGβ' 
+			when item_name = 'CNV-seq'  then 'CNV-seq' 
+			when item_name like '%全外%'  then 'WES'
+			when item_name = 'GCMS' or  item_name = '遗传代谢病panel' then 'IEM'
+			when item_name = 'TSH'  then 'TSH'
+			when item_name = '串联试剂' then '串联'
+			when item_name='CMA' and  b.business_class='产品类' then 'CMA自建'
+			when item_name='CMA' and  b.business_class='LDT' then 'CMA外送'
+			when b.cinv_key_2020 = '服务_软件' then '软件'
+			when b.equipment = '是' then '设备'
+			when item_name = '子痫前期预测' then '子痫(试剂+外送)'
+			when item_name = '耳聋基因'  and business_class = '产品类' then '耳聋试剂'
+			when item_name regexp '地贫' and business_class = '产品类' then '地贫试剂'
+			when b.business_class='LDT' then '其他LDT'
+			else '其他'
+			end as classify
+FROM shujuzu.out_depot_section1 a
+LEFT JOIN edw.map_inventory b			
+ON a.cinvcode = b.bi_cinvcode;			
 			
 #出库只取自定义的项目及设备，其余不需要统计数量，因此直接删掉			
 DELETE FROM shujuzu.out_depot_section			
@@ -162,13 +169,9 @@ CREATE TEMPORARY TABLE shujuzu.euipment_section0 as
 SELECT bi_cusname			
       ,bi_cinvcode			
       ,bi_cinvname			
-      ,case when new_installation_date >= '2016-10-01' and  new_installation_date <= '2017-09-30' then '1610-1709'			
-      		  when new_installation_date >= '2017-10-01' and  new_installation_date <= '2018-09-30' then '1710-1809'	
-      			when new_installation_date >= '2018-10-01' and  new_installation_date <= '2019-09-30' then '1810-1909'
-      			when new_installation_date >= '2019-10-01' and  new_installation_date <= '2020-09-30' then '1910-2009' 
-						end as date_section
+      ,year(new_installation_date) as date_section
 FROM edw.crm_account_equipments			
-WHERE new_installation_date >= '2016-10-01' and new_installation_date <= '2020-09-30' ;		
+WHERE new_installation_date >= '2017-01-01' and new_installation_date <= '2020-12-31' ;		
 
 DELETE FROM shujuzu.euipment_section0			
 WHERE date_section is null;			
@@ -186,7 +189,7 @@ LEFT JOIN edw.map_inventory b
 ON a.bi_cinvcode = b.bi_cinvcode;			
 			
 DROP TABLE if EXISTS shujuzu.euipment_section1;			
-CREATE TEMPORARY TABLE shujuzu.euipment_section1 as 			
+CREATE  TABLE shujuzu.euipment_section1 as 			
 SELECT b.sales_region_new			
       ,a.bi_cusname			
       ,a.bi_cinvcode			
