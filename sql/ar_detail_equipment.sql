@@ -186,7 +186,7 @@ FROM shujuzu.ar_detail_equipment
 #删除非设备的和杭州贝生的
 DELETE
 FROM shujuzu.ar_detail_equipment
-WHERE equipment = '否' or cohr = '杭州贝生'
+WHERE equipment = '否' 
 ;
 #删除字段是否设备，无其他用途
 ALTER TABLE shujuzu.ar_detail_equipment DROP COLUMN equipment;
